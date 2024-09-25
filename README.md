@@ -26,3 +26,37 @@ git clone git@github.com:Ksavva1021/Combine_HtautauCP.git Combine_HtautauCP
 scram b -j8
 ```
 
+### The magic command
+
+```
+ulimit -c 0
+```
+
+### Produce txt datacards
+
+Modify the options configs/harvestDatacards.yml as needed and then run
+ 
+```
+python3 scripts/harvestDatacards.py 
+```
+
+
+### Creating the workspaces
+
+```
+combineTool.py -m 125 -M T2W -P CombineHarvester.Combine_HtautauCP.CPMixtureDecays:CPMixtureDecays -i outputs/cmb -o ws.root --parallel 8
+```
+
+### Run maximum likelihood fits
+
+1D fit for alpha:
+
+```
+combineTool.py -m 125 -M MultiDimFit --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90 --points 21 --redefineSignalPOIs alpha  -d outputs/cmb/ws.root --algo grid -t -1 --there -n .alpha --alignEdges 1
+```
+
+### make plot of alpha scan
+
+```
+python3 scripts/plot1DScan.py --main=outputs/cmb/higgsCombine.alpha.MultiDimFit.mH125.root --POI=alpha --output=alpha_cmb --no-numbers --no-box --x-min=-90 --x-max=90 --y-max=8
+```
