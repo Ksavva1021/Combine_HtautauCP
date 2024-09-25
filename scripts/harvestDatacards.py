@@ -1,12 +1,12 @@
 import CombineHarvester.CombineTools.ch as ch
 from argparse import ArgumentParser
 import yaml
-from python.helpers import *
+from CombineHarvester.Combine_HtautauCP.helpers import *
 
 # HI
 description = '''This script makes datacards with CombineHarvester for performing tau ID SF measurments.'''
 parser = ArgumentParser(prog="harvesterDatacards",description=description,epilog="Success!")
-parser.add_argument('-c', '--config', dest='config', type=str, default='config/harvestDatacards.yml', action='store', help="set config file")
+parser.add_argument('-c', '--config', dest='config', type=str, default='configs/harvestDatacards.yml', action='store', help="set config file")
 args = parser.parse_args()
 
 with open(args.config, 'r') as file:
@@ -30,25 +30,25 @@ sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_ht
 # define categories which can depend on the channel
 cats = {}
 cats['tt'] = [
-        (1, 'zttEmbed'),
-        (2, 'jetFakes'),
-        (3, 'higgs_Rho_Rho'),
-        (4, 'higgs_0A1_Rho_and_0A1_0A1'),
-        (5, 'higgs_A1_Rho'),
-        (6, 'higgs_A1_A1_PolVec'),
-        (7, 'higgs_Pi_Rho_Mixed'),
-        (8, 'higgs_Pi_Pi'),
-        (9, 'higgs_Pi_A1_Mixed'),
-        (10,'tt_2016_higgs_Pi_0A1_Mixed'),
-        (11,'tt_2016_higgs_A1_0A1'),
+        (1, 'tt_2018_zttEmbed'),
+        (2, 'tt_2018_jetFakes'),
+        (3, 'tt_2018_higgs_Rho_Rho'),
+        (4, 'tt_2018_higgs_0A1_Rho_and_0A1_0A1'),
+        (5, 'tt_2018_higgs_A1_Rho'),
+        (6, 'tt_2018_higgs_A1_A1_PolVec'),
+        (7, 'tt_2018_higgs_Pi_Rho_Mixed'),
+        (8, 'tt_2018_higgs_Pi_Pi'),
+        (9, 'tt_2018_higgs_Pi_A1_Mixed'),
+        (10,'tt_2018_higgs_Pi_0A1_Mixed'),
+        (11,'tt_2018_higgs_A1_0A1'),
         ]
 
 
 # Create an empty CombineHarvester instance
-cb = CombineHarvester()
+cb = ch.CombineHarvester()
 
 # Add processes and observations
-for chn in channs:
+for chn in chans:
     # Adding Data,Signal Processes and Background processes to the harvester instance
     cb.AddObservations(['*'], ['htt'], ['13p6TeV'], [chn], cats[chn])
     cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs, cats[chn], False)
@@ -59,12 +59,12 @@ for chn in channs:
 
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
-    filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chan)
+    filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
     cb.cp().channel([chn]).process(sig_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
 
-#SetStandardBinNames(cb) # needed??
+ch.SetStandardBinNames(cb) # needed??
 
 #TODO: setup bbb's here
 
@@ -73,7 +73,7 @@ for chn in chans:
 print(green(">>> writing datacards..."))
 datacardtxt  = "%s/cmb/$BIN.txt" % (output_folder)
 datacardroot = "%s/cmb/common/$BIN_input.root" % (output_folder)
-writer = CardWriter(datacardtxt,datacardroot)
+writer = ch.CardWriter(datacardtxt,datacardroot)
 writer.SetVerbosity(1)
 writer.SetWildcardMasses([ ])
 writer.WriteCards("cmb", cb)

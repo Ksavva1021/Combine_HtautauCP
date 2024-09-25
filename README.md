@@ -18,10 +18,11 @@ git checkout v3.0.0
 scram b -j8
 ```
 
-### Combine Repository for the Htautau CP in decay measurement
+### CombineHarvester Repository for the Htautau CP in decay measurement
 
 ```
-cd $CMSSW_BASE/src
+cd $CMSSW_BASE/src/CombineHarvester
 git clone git@github.com:Ksavva1021/Combine_HtautauCP.git Combine_HtautauCP
+scram b -j8
 ```
 
