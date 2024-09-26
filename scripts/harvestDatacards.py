@@ -2,6 +2,7 @@ import CombineHarvester.CombineTools.ch as ch
 from argparse import ArgumentParser
 import yaml
 from CombineHarvester.Combine_HtautauCP.helpers import *
+from CombineHarvester.Combine_HtautauCP.systematics import AddSMRun3Systematics 
 
 # HI
 description = '''This script makes datacards with CombineHarvester for performing tau ID SF measurments.'''
@@ -18,9 +19,11 @@ else: chans = chans.split(',')
 
 output_folder = setup['output_folder']
 input_folder = setup['input_folder']
+mergeSymBins = setup['mergeSymBins'] # use this option to specify if we want to flatten and/or symmetrise distributions
+# TODO: implement this in this script based on the extracted shapes rather than using the additional pre-processing step as we did for Run-2
 
 # define background processes
-bkg_procs = ['EmbedZTT','ZL','TTT','VVT','jetFakes']
+bkg_procs = ['ZTT','ZL','TTT','VVT','jetFakes']
 
 # define signal processes, which are the same for every channel
 sig_procs = {}
@@ -56,6 +59,7 @@ for chn in chans:
     cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
 
 # TODO: systematics to be added here
+cb = AddSMRun3Systematics(cb)
 
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
@@ -69,9 +73,26 @@ ch.SetStandardBinNames(cb)
 
 #TODO: setup bbb's here
 
+if not mergeSymBins:
+    # If not flattening/symmetrising then add bbb uncerts using autoMC stats
+    cb.SetAutoMCStats(cb, 0., 1, 1)
+#else:
+    # if not then use old method for BBBs to allow correlations to be taken into account
+    # TODO: We could ask combine experts if it is possible to modify autoMCStats to allow for correlations which should be faster 
+    # TODO: implement old method for BBBs
+
+
+# Implement fixes for negative bins and yields
+
+# Zero negetive bins
+print(green(">>> Zeroing negative bins"))
+cb.ForEachProc(NegativeBins)
+
+print(green(">>> Zeroing negative yields"))
+cb.ForEachProc(NegativeYields)
 
 # Write datacards
-print(green(">>> writing datacards..."))
+print(green(">>> Writing datacards..."))
 datacardtxt  = "%s/$TAG/$BIN.txt" % (output_folder)
 datacardroot = "%s/$TAG/common/$BIN_input.root" % (output_folder)
 writer = ch.CardWriter(datacardtxt,datacardroot)

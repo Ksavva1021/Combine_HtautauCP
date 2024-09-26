@@ -40,6 +40,8 @@ Modify the options configs/harvestDatacards.yml as needed and then run
 python3 scripts/harvestDatacards.py 
 ```
 
+The systematics can be modified in python/systematics.py
+
 
 ### Creating the workspaces
 
@@ -54,6 +56,8 @@ combineTool.py -m 125 -M T2W -P CombineHarvester.Combine_HtautauCP.CPMixtureDeca
 ```
 combineTool.py -m 125 -M MultiDimFit --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90 --points 21 --redefineSignalPOIs alpha  -d outputs/cmb/ws.root --algo grid -t -1 --there -n .alpha --alignEdges 1
 ```
+
+TODO: add instructions for running points as batch jobs
 
 ### make plot of alpha scan
 

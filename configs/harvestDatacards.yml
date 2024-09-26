@@ -1,3 +1,4 @@
 input_folder: "shapes"
 output_folder: "outputs"
 channels: "all"
+mergeSymBins: False

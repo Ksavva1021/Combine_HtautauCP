@@ -244,10 +244,11 @@ canv = ROOT.TCanvas(args.output, args.output)
 pads = plot.OnePad()
 if args.pub: main_scan['graph'].SetMarkerSize(0)
 main_scan['graph'].SetMarkerColor(1)
-main_scan['graph'].SetLineColor(ROOT.kBlue)
-main_scan['graph'].SetLineStyle(2)
+#main_scan['graph'].SetLineColor(ROOT.kBlue)
+main_scan['graph'].SetLineColor(ROOT.TColor.GetColor("#000099"))
+main_scan['graph'].SetLineStyle(1)
 main_scan['graph'].SetLineWidth(3)
-main_scan['graph'].Draw('AP') #'APL'
+main_scan['graph'].Draw('APL') #'APL'
 
 
 axishist = plot.GetAxisHist(pads[0])
@@ -295,7 +296,7 @@ for yval in yvals:
             if cr['valid_hi']: line.DrawLine(cr['hi'], 0, cr['hi'], yval)
 
 main_scan['func'].SetLineColor(ROOT.TColor.GetColor("#000099"))
-main_scan['func'].Draw('same') 
+#main_scan['func'].Draw('same') # uncomment to draw spline
 main_scan['graph'].Draw('PSAME')
 
 if args.POI == 'alpha':
