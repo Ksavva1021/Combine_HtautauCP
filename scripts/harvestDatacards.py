@@ -20,7 +20,7 @@ output_folder = setup['output_folder']
 input_folder = setup['input_folder']
 
 # define background processes
-bkg_procs = ['ZTT','ZL','TTT','VVT','jetFakes']
+bkg_procs = ['EmbedZTT','ZL','TTT','VVT','jetFakes']
 
 # define signal processes, which are the same for every channel
 sig_procs = {}
@@ -62,17 +62,18 @@ for chn in chans:
     filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
-    cb.cp().channel([chn]).process(sig_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+    for sig_proc in sig_procs.values(): 
+        cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
 
-ch.SetStandardBinNames(cb) # needed??
+ch.SetStandardBinNames(cb)
 
 #TODO: setup bbb's here
 
 
 # Write datacards
 print(green(">>> writing datacards..."))
-datacardtxt  = "%s/cmb/$BIN.txt" % (output_folder)
-datacardroot = "%s/cmb/common/$BIN_input.root" % (output_folder)
+datacardtxt  = "%s/$TAG/$BIN.txt" % (output_folder)
+datacardroot = "%s/$TAG/common/$BIN_input.root" % (output_folder)
 writer = ch.CardWriter(datacardtxt,datacardroot)
 writer.SetVerbosity(1)
 writer.SetWildcardMasses([ ])
