@@ -70,11 +70,11 @@ def AddSMRun3Systematics(cb):
     
     cb.cp().process(sig_procs['ZH']).AddSyst(cb, 'pdf_Higgs_qqbar', 'lnN', ch.SystMap()(1.013))
     
+    # H->tautau BR uncertainties from: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR#SM_Higgs_Branching_Ratios_and_To
     cb.cp().process(sig_procs['ggH']+sig_procs['VBF']+sig_procs['WH']+sig_procs['ZH']).AddSyst(cb, 'BR_htt_THU', 'lnN', ch.SystMap()((0.984,1.017)))
     cb.cp().process(sig_procs['ggH']+sig_procs['VBF']+sig_procs['WH']+sig_procs['ZH']).AddSyst(cb, 'BR_htt_PU_mq', 'lnN', ch.SystMap()(1.010))
     cb.cp().process(sig_procs['ggH']+sig_procs['VBF']+sig_procs['WH']+sig_procs['ZH']).AddSyst(cb, 'BR_htt_PU_alphas', 'lnN', ch.SystMap()(1.006))
     
-    # H->tautau BR uncertainties from: 
     
     ###############################################
     # Shape/acceptance theory uncertainties
