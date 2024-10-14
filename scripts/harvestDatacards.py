@@ -17,34 +17,63 @@ chans = setup['channels']
 if chans == 'all': chans = ['tt'] # only using tt channel for now but can add mt and et later
 else: chans = chans.split(',')
 
+
 output_folder = setup['output_folder']
 input_folder = setup['input_folder']
 mergeSymBins = setup['mergeSymBins'] # use this option to specify if we want to flatten and/or symmetrise distributions
 # TODO: implement this in this script based on the extracted shapes rather than using the additional pre-processing step as we did for Run-2
 
-# define background processes
-bkg_procs = ['ZTT','ZL','TTT','VVT','jetFakes']
+Run2 = False
+if Run2:
+    # define background processes
+    bkg_procs = ['ZTT','ZL','TTT','VVT','jetFakes']
+    
+    # define signal processes, which are the same for every channel
+    sig_procs = {}
+    sig_procs['ggH'] = ['ggH_sm_htt','ggH_ps_htt','ggH_mm_htt']
+    sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_htt','WH_mm_htt','ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
+    
+    # define categories which can depend on the channel
+    cats = {}
+    cats['tt'] = [
+            (1, 'tt_2018_zttEmbed'),
+            (2, 'tt_2018_jetFakes'),
+            (3, 'tt_2018_higgs_Rho_Rho'),
+            (4, 'tt_2018_higgs_0A1_Rho_and_0A1_0A1'),
+            (5, 'tt_2018_higgs_A1_Rho'),
+            (6, 'tt_2018_higgs_A1_A1_PolVec'),
+            (7, 'tt_2018_higgs_Pi_Rho_Mixed'),
+            (8, 'tt_2018_higgs_Pi_Pi'),
+            (9, 'tt_2018_higgs_Pi_A1_Mixed'),
+            (10,'tt_2018_higgs_Pi_0A1_Mixed'),
+            (11,'tt_2018_higgs_A1_0A1'),
+            ]
 
-# define signal processes, which are the same for every channel
-sig_procs = {}
-sig_procs['ggH'] = ['ggH_sm_htt','ggH_ps_htt','ggH_mm_htt']
-sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_htt','WH_mm_htt','ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
+else: 
+    # define background processes
+    bkg_procs = ['ZTT','ZL','TTT','VVT','QCD','ZJ','TTJ','VVJ','W']
 
-# define categories which can depend on the channel
-cats = {}
-cats['tt'] = [
-        (1, 'tt_2018_zttEmbed'),
-        (2, 'tt_2018_jetFakes'),
-        (3, 'tt_2018_higgs_Rho_Rho'),
-        (4, 'tt_2018_higgs_0A1_Rho_and_0A1_0A1'),
-        (5, 'tt_2018_higgs_A1_Rho'),
-        (6, 'tt_2018_higgs_A1_A1_PolVec'),
-        (7, 'tt_2018_higgs_Pi_Rho_Mixed'),
-        (8, 'tt_2018_higgs_Pi_Pi'),
-        (9, 'tt_2018_higgs_Pi_A1_Mixed'),
-        (10,'tt_2018_higgs_Pi_0A1_Mixed'),
-        (11,'tt_2018_higgs_A1_0A1'),
-        ]
+    # define signal processes, which are the same for every channel
+    sig_procs = {}
+    sig_procs['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt']
+    sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt']
+
+    # define categories which can depend on the channel
+    cats = {}
+    cats['tt'] = [
+            (1, 'tt_mva_tau'),
+            (2, 'tt_mva_fake'),
+            (3, 'tt_higgs_rhorho'),
+            (4, 'tt_higgs_rhoa11pr'),
+            (5, 'tt_higgs_rhoa1'),
+            (6, 'tt_higgs_a1a1'),
+            (7, 'tt_higgs_pirho'),
+            (8, 'tt_higgs_pipi'),
+            (9, 'tt_higgs_pia1'),
+            (10,'tt_higgs_pia11pr'),
+            (11,'tt_higgs_a11pra1'),
+            ]
+
 
 
 # Create an empty CombineHarvester instance
@@ -63,7 +92,8 @@ cb = AddSMRun3Systematics(cb)
 
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
-    filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
+    if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
+    else: filename = '%s/test_datacards_oldA1_Run2Bins.root' % (input_folder)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
     for sig_proc in sig_procs.values(): 

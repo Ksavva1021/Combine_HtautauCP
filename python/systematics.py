@@ -149,4 +149,10 @@ def AddSMRun3Systematics(cb):
     
     # TODO: SV vertex direction/scale/efficiency (only efficience added for Run-2)
 
+    ###############################################
+    # DM-migration uncertainties
+    ###############################################
+
+    #TODO: migration uncertainties for migrations between reco-decay mode bins (not included for Run-2 but we could add)
+
     return cb

@@ -72,11 +72,11 @@ class CPMixtureDecays(PhysicsModel):
             scalings.append('muV')
 
         if ('ggH' in process or 'qqH' in process or 'WH' in process or 'ZH' in process) and 'hww' not in process:
-            if "sm" in process:
+            if "sm" in process.replace('prod_sm',''):
                 scalings.append('sm_scaling')
-            elif "ps" in process:
+            elif "ps" in process.replace('prod_ps',''):
                 scalings.append('ps_scaling')
-            elif "mm" in process:
+            elif "mm" in process.replace('prod_mm',''):
                 scalings.append('mm_scaling')
 
         if scalings:
