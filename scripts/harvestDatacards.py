@@ -3,12 +3,18 @@ from argparse import ArgumentParser
 import yaml
 from CombineHarvester.Combine_HtautauCP.helpers import *
 from CombineHarvester.Combine_HtautauCP.systematics import AddSMRun3Systematics 
+import os
 
 # HI
 description = '''This script makes datacards with CombineHarvester for performing tau ID SF measurments.'''
 parser = ArgumentParser(prog="harvesterDatacards",description=description,epilog="Success!")
 parser.add_argument('-c', '--config', dest='config', type=str, default='configs/harvestDatacards.yml', action='store', help="set config file")
+parser.add_argument('--name', type=str, help='name of the run (eg IP, E)', required=True)
+parser.add_argument('--vsjet', type=str, help='vsjet (medium/tight/vtight)', required=True)
 args = parser.parse_args()
+
+# Lock config file
+args.config = 'configs/harvestDatacards.yml'
 
 with open(args.config, 'r') as file:
    setup = yaml.safe_load(file)
@@ -18,8 +24,8 @@ if chans == 'all': chans = ['tt'] # only using tt channel for now but can add mt
 else: chans = chans.split(',')
 
 
-output_folder = setup['output_folder']
-input_folder = setup['input_folder']
+output_folder = os.path.join(setup['output_folder'], args.vsjet, args.name)
+input_folder = os.path.join(setup['input_folder'], args.vsjet, args.name)
 mergeSymBins = setup['mergeSymBins'] # use this option to specify if we want to flatten and/or symmetrise distributions
 # TODO: implement this in this script based on the extracted shapes rather than using the additional pre-processing step as we did for Run-2
 
@@ -93,7 +99,7 @@ cb = AddSMRun3Systematics(cb)
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    else: filename = '%s/test_datacards_oldA1_Run2Bins.root' % (input_folder)
+    else: filename = '%s/added_histo_%s.root' % (input_folder, args.vsjet)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
     for sig_proc in sig_procs.values(): 
@@ -129,3 +135,12 @@ writer = ch.CardWriter(datacardtxt,datacardroot)
 writer.SetVerbosity(1)
 writer.SetWildcardMasses([ ])
 writer.WriteCards("cmb", cb)
+writer.WriteCards("rhorho",   cb.cp().channel({"tt"}).bin_id({1,2,3}))
+writer.WriteCards("rhoa11pr", cb.cp().channel({"tt"}).bin_id({1,2,4}))
+writer.WriteCards("rhoa1",    cb.cp().channel({"tt"}).bin_id({1,2,5}))
+writer.WriteCards("a1a1",     cb.cp().channel({"tt"}).bin_id({1,2,6}))
+writer.WriteCards("pirho",    cb.cp().channel({"tt"}).bin_id({1,2,7}))
+writer.WriteCards("pipi",     cb.cp().channel({"tt"}).bin_id({1,2,8}))
+writer.WriteCards("pia1",     cb.cp().channel({"tt"}).bin_id({1,2,9}))
+writer.WriteCards("pia11pr",  cb.cp().channel({"tt"}).bin_id({1,2,10}))
+writer.WriteCards("a11pra1",  cb.cp().channel({"tt"}).bin_id({1,2,11}))
