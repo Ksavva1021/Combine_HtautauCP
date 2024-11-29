@@ -197,6 +197,8 @@ parser.add_argument('--logo', default='CMS')
 parser.add_argument('--logo_sub', default='Work in progress')
 parser.add_argument('--x_title', default='#alpha^{H#tau#tau} (#circ)')
 parser.add_argument('--no_title', action='store_true', help='do not draw the luminosity title')
+parser.add_argument('--vsjet', type=str, help='vsjet medium tight vtight', required=True)
+parser.add_argument('--name', type=str, help='name of study', required=True)
 args = parser.parse_args()
 if args.pub: args.no_input_label = True
 
@@ -309,6 +311,8 @@ if args.POI == 'alpha':
   latex.SetTextSize(0.04)
   latex.SetTextAlign(12)
   latex.DrawLatex(.7,.9,"0^{+} vs 0^{-} = %.2f#sigma" % significance)
+  latex.DrawLatex(.7,.8,f"Model: %s" % args.vsjet)
+  latex.DrawLatex(.7,.75,f"%s" % args.name)
   print("0^{+} vs 0^{-} = %.3f#sigma" % significance)
   print('max sigma = ', max_significance)
   print('best vs CP-odd sigma = ', ps_significance)
@@ -471,7 +475,7 @@ if args.json is not None:
 
 plot.DrawCMSLogo(pads[0], args.logo, args.logo_sub, 10, 0.035, 0.035, 1.2, cmsTextSize=1.0)
 
-if not args.no_title: plot.DrawTitle(pads[0], '58 fb^{-1} (13 TeV)', 3) # 16+17+18
+if not args.no_title: plot.DrawTitle(pads[0], '61.9 fb^{-1} (13.6 TeV)', 3) # early Run 3
 #if not args.no_title: plot.DrawTitle(pads[0], '8 fb^{-1} (13 TeV)', 3) # 16+17+18
 pads[0].SetTicks(1)
 
