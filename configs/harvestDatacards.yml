@@ -1,4 +1,4 @@
-input_folder: "shapes"
-output_folder: "outputs"
+input_folder: "/vols/cms/lcr119/offline/HiggsCP/TIDAL/Draw/cpdatacards/"
+output_folder: "outputs/"
 channels: "all"
 mergeSymBins: False
