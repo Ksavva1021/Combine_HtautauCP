@@ -93,7 +93,7 @@ cb = AddSMRun3Systematics(cb)
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    else: filename = '%s/added_histo.root' % (input_folder)
+    else: filename = '%s/added_histo_Run2Bins.root' % (input_folder)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
     for sig_proc in sig_procs.values(): 
