@@ -9,8 +9,8 @@ import os
 description = '''This script makes datacards with CombineHarvester for performing tau ID SF measurments.'''
 parser = ArgumentParser(prog="harvesterDatacards",description=description,epilog="Success!")
 parser.add_argument('-c', '--config', dest='config', type=str, default='configs/harvestDatacards.yml', action='store', help="set config file")
-parser.add_argument('--name', type=str, help='name of the run (eg IP, E)', required=True)
-parser.add_argument('--vsjet', type=str, help='vsjet (medium/tight/vtight)', required=True)
+# parser.add_argument('--name', type=str, help='name of the run (eg IP, E)', required=True)
+# parser.add_argument('--vsjet', type=str, help='vsjet (medium/tight/vtight)', required=True)
 args = parser.parse_args()
 
 # Lock config file
@@ -24,8 +24,12 @@ if chans == 'all': chans = ['tt'] # only using tt channel for now but can add mt
 else: chans = chans.split(',')
 
 
-output_folder = os.path.join(setup['output_folder'], args.vsjet, args.name)
-input_folder = os.path.join(setup['input_folder'], args.vsjet, args.name)
+# output_folder = os.path.join(setup['output_folder'], args.vsjet, args.name)
+# input_folder = os.path.join(setup['input_folder'], args.vsjet, args.name)
+output_folder = setup['output_folder']
+input_folder = setup['input_folder']
+
+
 mergeSymBins = setup['mergeSymBins'] # use this option to specify if we want to flatten and/or symmetrise distributions
 # TODO: implement this in this script based on the extracted shapes rather than using the additional pre-processing step as we did for Run-2
 
@@ -99,7 +103,7 @@ cb = AddSMRun3Systematics(cb)
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    else: filename = '%s/added_histo_%s.root' % (input_folder, args.vsjet)
+    else: filename = '%s/added_histo.root' % (input_folder) #, args.vsjet)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
     for sig_proc in sig_procs.values(): 
