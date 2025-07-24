@@ -2,7 +2,7 @@ import CombineHarvester.CombineTools.ch as ch
 from argparse import ArgumentParser
 import yaml
 from CombineHarvester.Combine_HtautauCP.helpers import *
-from CombineHarvester.Combine_HtautauCP.systematics import AddSMRun3Systematics 
+from CombineHarvester.Combine_HtautauCP.systematics import AddSMRun3Systematics
 
 # HI
 description = '''This script makes datacards with CombineHarvester for performing tau ID SF measurments.'''
@@ -93,7 +93,7 @@ cb = AddSMRun3Systematics(cb)
 # Populating Observation, Process and Systematic entries in the harvester instance
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    else: filename = '%s/test_datacards_oldA1_Run2Bins_unoptimised_all2022.root' % (input_folder)
+    else: filename = '%s/added_histo.root' % (input_folder)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
     for sig_proc in sig_procs.values(): 
@@ -129,7 +129,7 @@ writer = ch.CardWriter(datacardtxt,datacardroot)
 writer.SetVerbosity(1)
 writer.SetWildcardMasses([ ])
 writer.WriteCards("cmb", cb)
-
+# Cards per category
 writer.WriteCards("rhorho",   cb.cp().channel({"tt"}).bin_id({1,2,3}))
 writer.WriteCards("rhoa11pr", cb.cp().channel({"tt"}).bin_id({1,2,4}))
 writer.WriteCards("rhoa1",    cb.cp().channel({"tt"}).bin_id({1,2,5}))
