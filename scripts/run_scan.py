@@ -10,6 +10,12 @@ import subprocess
 # python3 scripts/run_scan.py 
 # ```
 
+cfg = 'configs/harvestDatacards.yml'
+
+with open(cfg, 'r') as file:
+   setup = yaml.safe_load(file)
+
+folder = setup['output_folder']
 
 def get_args():
     parser = argparse.ArgumentParser(description="Run combine workflow for CP analysis")
@@ -32,7 +38,6 @@ def run_command(command):
         raise
 
 def run_scan(): #vsjet, name):
-    folder = f"output" # /{vsjet}/{name}"
     # HARVEST DATACARDS
     run_command(f"python3 scripts/harvestDatacards.py") 
     # CREATE COMBINE WORKSPACE
