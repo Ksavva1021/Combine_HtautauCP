@@ -4,6 +4,7 @@ import argparse
 ROOT.TH1.AddDirectory(False)
 from ctypes import c_double
 import os
+ROOT.gROOT.SetBatch(True)
  
 # note that the merging of bins requires an even numnber of phi_CP bins, and this number must be set to the specific value used in the dictionary below otherwise the method will give incorrect results!
 
@@ -48,9 +49,6 @@ def MergeXBins(hist, nxbins):
   chi2_total = sum(chi2_perbin)
   ndf_total = ndf_perbin * len(chi2_perbin)
   p_val_total = ROOT.TMath.Prob(chi2_total, ndf_total)
-
-  print(f'Chi2 total: {chi2_total}, NDF total: {ndf_total}, P-value total: {p_val_total:.4f}')
-  print(f'Chi2 per bin: {chi2_perbin}, P-value per bin: {p_val_perbin}')
 
   return histnew, p_val_total, p_val_perbin
 
@@ -188,7 +186,7 @@ def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
         ROOT.gDirectory.cd('/')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--file', '-f', help= 'File from which we want to merge X bins')
+parser.add_argument('--file', '-f', help= 'File from which we want to merge bins')
 parser.add_argument('--test', '-t', action='store_true', help= 'Run statistical tests on the histograms to check compatability of smoothed and unsmoothed histograms')
 args = parser.parse_args()
 filename = args.file
@@ -203,23 +201,195 @@ for key in original_file.GetListOfKeys():
         getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname)
 
 if args.test:
+
     if not os.path.exists('test_results'):
         os.makedirs('test_results')
 
-    print('\n\nSymmetrisation test results:')
-    for dirname, results in test_results_sym.items():
-        print(f'Directory: {dirname}')
-        for hist_name, (p_val_total, p_val_last) in results.items():
-            if not(hist_name in ['QCD', 'ZTT'] or hist_name.startswith('ggH_sm') or hist_name.startswith('qqH_sm')) or 'unfiltered' in hist_name: continue
-            print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
+    # make ROOT plots of the p-values
+    # 1D plot just showing the p-values to show they are uniform
+    # 2D plot showing processes on the x-axis, categories on the y-axis and p-values as the z-axis
+    gr_sym_id = ROOT.TGraph()
+    gr_sym_last_id = ROOT.TGraph()
+    gr_flat_id = ROOT.TGraph()
+    gr_flat_last_id = ROOT.TGraph()
 
+    hist_sym_1d = ROOT.TH1D('hist_sym_1d','Symmetrisation tests: all BDT bins',20,0,1)
+    hist_flat_1d = ROOT.TH1D('hist_flat_1d','Flattening tests: all BDT bins',20,0,1)
+    hist_sym_last_1d = ROOT.TH1D('hist_sym_last_1d','Symmetrisation tests: last BDT bin',20,0,1)
+    hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: lst BDT bin',20,0,1)
+
+    N_categories = len(test_results_sym)
+    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,9,0,9)
+    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,5,0,5)
+    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,9,0,9)
+    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: lst BDT bin',N_categories,0,N_categories,5,0,5)
+
+    hist_sym_2d.GetZaxis().SetTitle('P-value')
+    hist_flat_2d.GetZaxis().SetTitle('P-value')
+    hist_sym_last_2d.GetZaxis().SetTitle('P-value (last BDT bin)')
+    hist_flat_last_2d.GetZaxis().SetTitle('P-value (last BDT bin)')
+
+    hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
+    hist_sym_2d.GetYaxis().SetBinLabel(2,'QCD')
+    hist_sym_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_sm_prod_ps_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_sm_prod_mm_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(7,'ggH_ps_prod_sm_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(8,'ggH_ps_prod_ps_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(9,'ggH_ps_prod_mm_htt125')
+
+    hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
+    hist_flat_2d.GetYaxis().SetBinLabel(2,'QCD')
+    hist_flat_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
+    hist_flat_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
+    hist_flat_2d.GetYaxis().SetBinLabel(5,'Higgs_flat_htt125')
+
+    hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(2,'QCD')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_sm_prod_ps_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_sm_prod_mm_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(7,'ggH_ps_prod_sm_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(8,'ggH_ps_prod_ps_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(9,'ggH_ps_prod_mm_htt125')
+
+    hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+    hist_flat_last_2d.GetYaxis().SetBinLabel(2,'QCD')
+    hist_flat_last_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
+    hist_flat_last_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
+    hist_flat_last_2d.GetYaxis().SetBinLabel(5,'Higgs_flat_htt125')
+
+    hist_sym_2d.SetStats(0)
+    hist_flat_2d.SetStats(0)
+    hist_sym_last_2d.SetStats(0)
+    hist_flat_last_2d.SetStats(0)
+
+    hist_sym_1d.GetXaxis().SetTitle('P-value')
+    hist_flat_1d.GetXaxis().SetTitle('P-value')
+    hist_sym_last_1d.GetXaxis().SetTitle('P-value (last BDT bin)')
+    hist_flat_last_1d.GetXaxis().SetTitle('P-value (last BDT bin)')
+
+    hist_sym_1d.SetStats(0)
+    hist_flat_1d.SetStats(0)
+    hist_sym_last_1d.SetStats(0)
+    hist_flat_last_1d.SetStats(0)
+    # make sure 1D keeps track of errors
+    hist_sym_1d.Sumw2()
+    hist_flat_1d.Sumw2()
+    hist_sym_last_1d.Sumw2()
+    hist_flat_last_1d.Sumw2()
+
+    print('\n\nSymmetrisation test results:')
+    i = 0
+    for dirname, results in test_results_sym.items():
+        i+=1
+        print(f'Directory: {dirname}')
+        # set x-labels
+        hist_sym_2d.GetXaxis().SetBinLabel(i, dirname)
+        hist_sym_last_2d.GetXaxis().SetBinLabel(i, dirname)
+        for hist_name, (p_val_total, p_val_last) in results.items():
+            if not(hist_name in ['QCD', 'ZTT'] or hist_name.startswith('ggH') or hist_name.startswith('qqH_sm')) or 'unfiltered' in hist_name: continue
+            #print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
+            j = None
+            if hist_name == 'ZTT': j = 1
+            if hist_name == 'QCD': j = 2
+            if hist_name == 'qqH_sm_htt125': j = 3
+            if hist_name == 'ggH_sm_prod_sm_htt125': j = 4
+            if hist_name == 'ggH_sm_prod_ps_htt125': j = 5
+            if hist_name == 'ggH_sm_prod_mm_htt125': j = 6
+            if hist_name == 'ggH_ps_prod_sm_htt125': j = 7
+            if hist_name == 'ggH_ps_prod_ps_htt125': j = 8
+            if hist_name == 'ggH_ps_prod_mm_htt125': j = 9
+
+            if j is None: continue
+
+            hist_sym_2d.SetBinContent(i,j,p_val_total)
+            hist_sym_last_2d.SetBinContent(i,j,p_val_last)
+
+            if j < 7: # only use statistically independent processes for 1D plot
+              gr_sym_id.SetPoint(gr_sym_id.GetN(), p_val_total, 1)
+              gr_sym_last_id.SetPoint(gr_sym_last_id.GetN(), p_val_last,1)
+              hist_sym_1d.Fill(p_val_total)
+              hist_sym_last_1d.Fill(p_val_last)
 
     print('\n\nFlattening test results:')
+    i=0
     for dirname, results in test_results_flat.items():
+        i+=1
         print(f'Directory: {dirname}')
+        # set x-labels
+        hist_flat_2d.GetXaxis().SetBinLabel(i, dirname)
+        hist_flat_last_2d.GetXaxis().SetBinLabel(i, dirname)
         for hist_name, (p_val_total, p_val_last) in results.items():
-            if hist_name not in ['QCD', 'ZTT', 'qqH_flat_htt125', 'ggH_flat_prod_sm_htt125']: continue
-            print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
+            if hist_name not in ['QCD', 'ZTT', 'qqH_flat_htt125', 'ggH_flat_prod_sm_htt125', 'Higgs_flat_htt125']: continue
+            #print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
 
+            j = None
+            if hist_name == 'ZTT': j = 1
+            if hist_name == 'QCD': j = 2
+            if hist_name == 'qqH_flat_htt125': j = 3
+            if hist_name == 'ggH_flat_prod_sm_htt125': j = 4
+            if hist_name == 'Higgs_flat_htt125': j = 5
 
+            hist_flat_2d.SetBinContent(i,j,p_val_total)
+            hist_flat_last_2d.SetBinContent(i,j,p_val_last)
 
+            if j and j not in [3,4]: # only use statistically independent processes for 1D plot
+              hist_flat_1d.Fill(p_val_total)
+              hist_flat_last_1d.Fill(p_val_last)
+              gr_flat_id.SetPoint(gr_flat_id.GetN(), p_val_total, 1)
+              gr_flat_last_id.SetPoint(gr_flat_last_id.GetN(), p_val_last, 1)
+
+    fout = ROOT.TFile('test_results/test_results.root', 'RECREATE')
+    fout.cd()
+    hist_sym_2d.Write()
+    hist_flat_2d.Write()
+    hist_sym_last_2d.Write()
+    hist_flat_last_2d.Write()
+    gr_sym_id.Write('gr_sym_id')
+    gr_sym_last_id.Write('gr_sym_last_id')
+    gr_flat_id.Write('gr_flat_id')
+    gr_flat_last_id.Write('gr_flat_last_id')
+    hist_sym_1d.Write()
+    hist_flat_1d.Write()
+    hist_sym_last_1d.Write()
+    hist_flat_last_1d.Write()
+
+    c_2d = ROOT.TCanvas('', '', 1200, 600)
+    # decrease number of sf shown in plot
+    ROOT.gStyle.SetPaintTextFormat(".3g")
+    ROOT.gStyle.SetPalette(ROOT.kBlackBody)
+
+    #increase L and R margins
+    c_2d.SetLeftMargin(0.15)
+    c_2d.SetRightMargin(0.13)
+    hist_sym_2d.GetZaxis().SetRangeUser(0,1)
+    hist_sym_2d.Draw('COLZ TEXT')
+    c_2d.Print('test_results/chi2tests_symmetrisation_2d.pdf')
+
+    hist_sym_last_2d.GetZaxis().SetRangeUser(0,1)
+    hist_sym_last_2d.Draw('COLZ TEXT')
+    c_2d.Print('test_results/chi2tests_symmetrisation_last_2d.pdf')
+
+    hist_flat_2d.GetZaxis().SetRangeUser(0,1)
+    hist_flat_2d.Draw('COLZ TEXT')
+    c_2d.Print('test_results/chi2tests_flattening_2d.pdf')
+
+    hist_flat_last_2d.GetZaxis().SetRangeUser(0,1)
+    hist_flat_last_2d.Draw('COLZ TEXT')
+    c_2d.Print('test_results/chi2tests_flattening_last_2d.pdf')
+
+    c_1d = ROOT.TCanvas('', '', 800, 600)
+    hist_sym_1d.Draw()
+    c_1d.Print('test_results/chi2tests_symmetrisation_1d.pdf')
+
+    hist_flat_1d.Draw()
+    c_1d.Print('test_results/chi2tests_flattening_1d.pdf')
+
+    hist_sym_last_1d.Draw()
+    c_1d.Print('test_results/chi2tests_symmetrisation_last_1d.pdf')
+
+    hist_flat_last_1d.Draw()
+    c_1d.Print('test_results/chi2tests_flattening_last_1d.pdf')
