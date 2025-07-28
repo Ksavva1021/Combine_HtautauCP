@@ -161,7 +161,7 @@ def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
                 hsm = directory.Get(key.GetName().replace('H_mm_','H_sm_'))
                 hps = directory.Get(key.GetName().replace('H_mm_','H_ps_'))
                 histo_asym = ASymmetrise(histo,hsm,hps,nxbins)
-                histo_asym.SetName(histo.GetName()+'_asym')
+                histo_asym.SetName(histo.GetName()+'_sym')
                 histo_asym.Write()
                 continue 
 
@@ -281,11 +281,11 @@ if args.test:
     hist_sym_last_1d.Sumw2()
     hist_flat_last_1d.Sumw2()
 
-    print('\n\nSymmetrisation test results:')
+    #print('\n\nSymmetrisation test results:')
     i = 0
     for dirname, results in test_results_sym.items():
         i+=1
-        print(f'Directory: {dirname}')
+        #print(f'Directory: {dirname}')
         # set x-labels
         hist_sym_2d.GetXaxis().SetBinLabel(i, dirname)
         hist_sym_last_2d.GetXaxis().SetBinLabel(i, dirname)
@@ -314,11 +314,11 @@ if args.test:
               hist_sym_1d.Fill(p_val_total)
               hist_sym_last_1d.Fill(p_val_last)
 
-    print('\n\nFlattening test results:')
+    #print('\n\nFlattening test results:')
     i=0
     for dirname, results in test_results_flat.items():
         i+=1
-        print(f'Directory: {dirname}')
+        #print(f'Directory: {dirname}')
         # set x-labels
         hist_flat_2d.GetXaxis().SetBinLabel(i, dirname)
         hist_flat_last_2d.GetXaxis().SetBinLabel(i, dirname)
