@@ -128,8 +128,6 @@ for chn in chans:
 
 ch.SetStandardBinNames(cb)
 
-#TODO: setup bbb's here
-
 def MatchingProcess(first, second):
     return (
         first.bin()      == second.bin() and
