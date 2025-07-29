@@ -53,11 +53,12 @@ if Run2:
 else: 
     # define background processes
     bkg_procs = ['ZTT','ZL','TTT','VVT','QCD','ZJ','TTJ','VVJ','W']
+    fake_procs = ['jetFakes','QCD','W','TTJ','VVJ','ZJ']
 
     # define signal processes, which are the same for every channel
     sig_procs = {}
     sig_procs['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt']
-    sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt']
+    sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_htt','WH_mm_htt','ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
 
     # define categories which can depend on the channel
     cats = {}
@@ -107,22 +108,22 @@ for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     else: filename = '%s/added_histo_Run2Bins-mergeXbins.root' % (input_folder)
     print (">>>   file %s" % (filename))
-    cb.cp().channel([chn]).backgrounds().process(['ZL']).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
+    cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
-        cb.cp().channel([chn]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+        cb.cp().channel([chn]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
         for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
     else:
         for cat in cats[chn]:
             if cat[1] in flat_cats:
-                cb.cp().channel([chn]).bin_id([cat[0]]).process(bkg_procs).process(['QCD'],False).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
                 # jetFakes and signal are symmetrised rather than flattened
-                cb.cp().channel([chn]).bin_id([cat[0]]).process(bkg_procs).process(['QCD']).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
             elif cat[1] in sym_cats:
-                cb.cp().channel([chn]).bin_id([cat[0]]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
             else:
-                cb.cp().channel([chn]).bin_id([cat[0]]).process(bkg_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
 
 ch.SetStandardBinNames(cb)
@@ -145,30 +146,42 @@ if merge_mode == 0:
     # If not flattening/symmetrising then add bbb uncerts using autoMC stats
     cb.SetAutoMCStats(cb, 0., 1, 1)
 else:
-    cb.cp().bin_id([1,2]).SetAutoMCStats(cb, 0., 1, 1) # use ausoMCstats for background categories since these don't merge bins
-    # if not then use old method for BBBs to allow correlations to be taken into account
-    # TODO: We could ask combine experts if it is possible to modify autoMCStats to allow for correlations which should be faster 
-    # TODO: implement old method for BBBs
+    cb.cp().bin_id([1,2]).SetAutoMCStats(cb, 0., 1, 1) # use autoMCstats for background categories since these don't merge bins
+    # For other categories use old method for BBBs to allow correlations to be taken into account for merged bins
 
-    #bbb_fakes = ch.BinByBinFactory()
-    #bbb_fakes.SetPattern("CMS_$ANALYSIS_$CHANNEL_$BIN_$ERA_$PROCESS_bbb_bin_$#") # this needs to have "_bbb_bin_" in the pattern for the mergeXbbb option to work
-    #bbb_fakes.SetAddThreshold(0.)
-    #bbb_fakes.SetMergeThreshold(0.5)
-    #bbb_fakes.SetFixNorm(False)
-    #bbb_fakes.MergeBinErrors(cb.cp().bin_id([1,2], False).backgrounds().process(['QCD']))
-    #bbb_fakes.AddBinByBin(cb.cp().bin_id([1,2], False).backgrounds().process(['QCD']), cb)
+    bbb_sym = ch.BinByBinFactory()
+    bbb_sym.SetPattern("CMS_$ANALYSIS_$CHANNEL_$BIN_$ERA_$PROCESS_mergesym_bbb_bin_$#") # this needs to have "_bbb_bin_" in the pattern for the mergeXbbb option to work
+    bbb_sym.SetAddThreshold(0.)
+    bbb_sym.SetMergeThreshold(0.3)
+    bbb_sym.SetFixNorm(False)
 
-    bbb_real = ch.BinByBinFactory()
-    bbb_real.SetPattern("CMS_$ANALYSIS_$CHANNEL_$BIN_$ERA_$PROCESS_bbb_bin_$#") # this needs to have "_bbb_bin_" in the pattern for the mergeXbbb option to work
-    bbb_real.SetAddThreshold(0.)
-    #bbb_real.SetMergeThreshold(0.5)
-    bbb_real.SetMergeThreshold(1.0)
-    bbb_real.SetFixNorm(False)
-    #bbb_real.MergeBinErrors(cb.cp().bin_id([1,2], False).backgrounds().process(['ZTT']).process(['QCD'],False))
-    #bbb_real.AddBinByBin(cb.cp().bin_id([1,2], False).backgrounds().process(['ZTT']).process(['QCD'],False), cb)
-    bbb_real.MergeBinErrors(cb.cp().backgrounds().process(['QCD'],False))
-    bbb_real.AddBinByBin(cb.cp().backgrounds().process(['QCD'],False), cb)
+    bbb_flat = ch.BinByBinFactory()
+    bbb_flat.SetPattern("CMS_$ANALYSIS_$CHANNEL_$BIN_$ERA_$PROCESS_mergeflat_bbb_bin_$#") # this needs to have "_bbb_bin_" in the pattern for the mergeXbbb option to work
+    bbb_flat.SetAddThreshold(0.)
+    bbb_flat.SetMergeThreshold(0.3)
+    bbb_flat.SetFixNorm(False)
 
+    # we keep seperate uncertainties for signals so that they can be correlated properly accross sm, ps, and mm (since they are from the same reweighting samples)
+    # we merge all signal process together though to miminise the number of bbb uncertainties
+    bbb_sym_signal = ch.BinByBinFactory()
+    bbb_sym_signal.SetPattern("CMS_$ANALYSIS_$CHANNEL_$BIN_$ERA_signal_mergesym_bbb_bin_$#") # this needs to have "_bbb_bin_" in the pattern for the mergeXbbb option to work
+    bbb_sym_signal.SetAddThreshold(0.)
+    bbb_sym_signal.SetMergeThreshold(1.0)
+    bbb_sym_signal.SetFixNorm(False)
+    bbb_sym_signal.MergeAndAdd(cb.cp().signals().process(["ggH_sm_prod_sm_htt","qqH_sm_htt","WH_sm_htt","ZH_sm_htt"]),cb)
+    bbb_sym_signal.MergeAndAdd(cb.cp().signals().process(["ggH_ps_prod_sm_htt","qqH_ps_htt","WH_ps_htt","ZH_ps_htt"]),cb)
+    bbb_sym_signal.MergeAndAdd(cb.cp().signals().process(["ggH_mm_prod_sm_htt","qqH_mm_htt","WH_mm_htt","ZH_mm_htt"]),cb)
+
+    if merge_mode == 1:
+        bbb_sym.MergeAndAdd(cb.cp().bin_id([1,2], False).backgrounds(), cb)
+    else:
+        for chns in chans:
+            for cat in cats[chn]:
+                if cat[1] in flat_cats:
+                    bbb_flat.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False), cb)
+                    bbb_sym.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs), cb)
+                elif cat[1] in sym_cats:
+                    bbb_sym.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds(), cb)
 
     # As we merged the x-axis bins then we need to rename the bbb uncertainties so that they are correlated properly
     # First we will deal with the catogiries with flat background when all phi_CP bins are merged into 1
@@ -177,15 +190,15 @@ else:
     # If these numbers aren't set correctly the method won't work so be careful!
     # Note that the merging is now only performed for the templates that have a flat distribution
 
-    tt_nxbins = [1, 1, 10, 4, 4, 1, 10, 1, 1, 4, 4]  # tt channel binning, set to 1 if no flattening is applied
-    mt_nxbins = [1, 1, 10, 1, 4, 4]                 # mt (and et) channel binning, set to 1 if no flattening is applied
+    tt_nxbins = [1, 1, 10, 4, 4, 4, 10, 4, 4, 4, 4]  
+    mt_nxbins = [1, 1, 10, 4, 4, 4]
 
     for chan in chans:
         bins = tt_nxbins if ch == "tt" else mt_nxbins
         for i, nxbins in enumerate(bins):
             if nxbins <= 1:
                 continue
-            print(f"Merging bbb uncertainties for {chan} channel for category {i+1}, nxbins set to {nxbins}")
+            print(f"Merging flattened bbb uncertainties for {chan} channel for category {i+1}, nxbins set to {nxbins}")
 
             def process_callback(proc):
                 nominal = proc.ClonedShape().Clone()
@@ -194,16 +207,15 @@ else:
                     old_name = syst.name()
                     match_proc = MatchingProcess(proc, syst)
 
-                    if match_proc and "_bbb_bin_" in old_name:
+                    if match_proc and "_bbb_bin_" in old_name and 'mergeflat' in old_name:
                         bin_num = int(old_name.split('_bbb_bin_')[-1])
 
                         if (bin_num-1) % nxbins == 0:
-                            print('bin_num again:', bin_num)
                             nonum_name = old_name.replace(f"_bbb_bin_{bin_num}", '_bbb_bin_')
                             shape_u_new = syst.ClonedShapeU().Clone()
                             shape_d_new = syst.ClonedShapeD().Clone()
-                            shape_u_new.Scale(syst.value_u()) ###
-                            shape_d_new.Scale(syst.value_d()) ###
+                            shape_u_new.Scale(syst.value_u())
+                            shape_d_new.Scale(syst.value_d())
                             shape_u_new.Add(nominal, -1)
                             shape_d_new.Add(nominal, -1)
                             names = []
@@ -213,8 +225,8 @@ else:
                             def merge_syst_shapes(s):
                                 shape_u_temp = s.ClonedShapeU().Clone()
                                 shape_d_temp = s.ClonedShapeD().Clone()
-                                shape_u_temp.Scale(s.value_u()) ###
-                                shape_d_temp.Scale(s.value_d()) ###
+                                shape_u_temp.Scale(s.value_u())
+                                shape_d_temp.Scale(s.value_d())
                                 shape_u_temp.Add(nominal, -1)
                                 shape_d_temp.Add(nominal, -1)
                                 shape_u_new.Add(shape_u_temp)
@@ -232,9 +244,62 @@ else:
                             
                 cb.cp().ForEachSyst(syst_callback)
 
-            #cb.cp().channel([chan]).bin_id([i+1]).backgrounds().process(["QCD"], False).ForEachProc(process_callback)
-            #TODO: need to see why the process where everything gets merged into appears to be random
+            cb.cp().channel([chan]).bin_id([i+1]).ForEachProc(process_callback)
 
+    for chan in chans:
+        # Now we want to merge the processes that aren't flat but that are symmetric about phiCP=pi
+        bins = tt_nxbins if chan == "tt" else mt_nxbins
+        for i, nxbins in enumerate(bins):
+            if nxbins <= 1:
+                continue
+            print(f"Merging symmetrised bbb uncertainties for {chan} channel for category {i+1}, nxbins set to {nxbins}")
+
+            def process_callback(proc):
+                nominal = proc.ClonedShape().Clone()
+
+                def syst_callback(syst):
+                    old_name = syst.name()
+                    match_proc = MatchingProcess(proc, syst)
+
+                    if match_proc and "_bbb_bin_" in old_name and 'mergesym' in old_name:
+                        bin_num = int(old_name.split('_bbb_bin_')[-1])
+
+                        bin_num_y = (bin_num - 1) // nxbins
+
+                        if (bin_num - bin_num_y * nxbins) <= nxbins / 2:
+                            bin_num_hi = (bin_num_y + 1) * nxbins - (bin_num - bin_num_y * nxbins) + 1
+                            nonum_name = old_name.replace(f"_bbb_bin_{bin_num}", '_bbb_bin_')
+                            shape_u_new = syst.ClonedShapeU().Clone()
+                            shape_d_new = syst.ClonedShapeD().Clone()
+                            shape_u_new.Scale(syst.value_u())
+                            shape_d_new.Scale(syst.value_d())
+                            shape_u_new.Add(nominal, -1)
+                            shape_d_new.Add(nominal, -1)
+
+                            to_add_name = f"{nonum_name}{bin_num_hi}"
+                            def merge_syst_shapes(s):
+                                match_proc_2 = MatchingProcess(proc, s)
+                                if match_proc_2:
+                                    shape_u_temp = s.ClonedShapeU().Clone()
+                                    shape_d_temp = s.ClonedShapeD().Clone()
+                                    shape_u_temp.Scale(s.value_u())
+                                    shape_d_temp.Scale(s.value_d())
+                                    shape_u_temp.Add(nominal, -1)
+                                    shape_d_temp.Add(nominal, -1)
+                                    shape_u_new.Add(shape_u_temp)
+                                    shape_d_new.Add(shape_d_temp)
+
+                            cb.cp().syst_name([to_add_name]).ForEachSyst(merge_syst_shapes)
+                            shape_u_new.Add(nominal)
+                            shape_d_new.Add(nominal)
+
+                            syst.set_shapes(shape_u_new, shape_d_new, nominal)
+
+                            cb.FilterSysts(lambda s: s.name() == to_add_name and MatchingProcess(proc, s))
+
+                cb.cp().ForEachSyst(syst_callback)
+
+            cb.cp().channel([chan]).bin_id([i+1]).ForEachProc(process_callback)
 
 # Implement fixes for negative bins and yields
 
