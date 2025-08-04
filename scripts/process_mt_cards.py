@@ -2,43 +2,14 @@ import ROOT
 import os
 from hadd_cp_datacards import hadd_root_files
 
-dirname = 'mt_datacards_desy'
+datacard_name = 'mt_2022_2023preBPix.root'
 
-
-
-eras = ['preEE', 'postEE','preBPix']
-
-# first hadd together all the datacards inside the era directories
-for era in eras:
-    era_dir = os.path.join(dirname, era)
-    if not os.path.exists(era_dir):
-        print(f"Directory {era_dir} does not exist.")
-        continue
-    
-    os.system(f'hadd -f {era_dir}/mt_datacard_{era}.root {era_dir}/shapes__cat_*.root')
-
-# now combine eras into a single file
-input_files = [os.path.join(dirname, era, f'mt_datacard_{era}.root') for era in eras] 
-output_file = os.path.join(dirname, 'mt_datacard_erascombined.root')
-
-dir_combinations = {
-    'mt_mva_fake' : ['fake'],
-    'mt_mva_tau' : ['tautau'],
-}
-
-for i in [0, 1, 2]:
-    dir_combinations[f'mt_mupi_cat{i}'] = [f'_cat{i}_tau2pi']
-    dir_combinations[f'mt_murho_cat{i}'] = [f'_cat{i}_tau2rho']
-    dir_combinations[f'mt_mua11pr_cat{i}'] = [f'_cat{i}_tau2a1']
-    dir_combinations[f'mt_mua1_cat{i}'] = [f'_cat{i}_tau2a1_3pr']
-
-hadd_root_files(input_files, output_file, dir_combinations)
 
 def roll_histograms(hists):
     # get total number of bins of all histograms
     total_bins = sum(hist.GetNbinsX() for hist in hists)
     # create a new histogram with the total number of bins
-    rolled_hist = ROOT.TH1F(hists[0].GetName(), '', total_bins, 0, total_bins)
+    rolled_hist = ROOT.TH1F(hists[0].GetName().split('_cat')[0], '', total_bins, 0, total_bins)
 
     # Fill the rolled histogram
     bin_offset = 0
@@ -65,32 +36,27 @@ def merge_seperate_cats(input_file, output_file):
             dir_name = key.GetName()
             #hist_name = obj.GetName()
 
-            if dir_name[:-1].endswith('cat'):
-                dir_name_nonum = dir_name[:-1]
-                cat_name = f'cat{dir_name[-1]}'
+            if 'cat' in dir_name:
+                dir_name_nocat = '_'.join(dir_name.split('_')[2:])
+                cat_name = '_'+dir_name.split('_')[1]
+            else: 
+                dir_name_nocat = dir_name
+                cat_name = ''
 
-                if dir_name_nonum not in combined_dirs_histograms:
-                    combined_dirs_histograms[dir_name_nonum] = {}
-
-                for hist_key in obj.GetListOfKeys():
-                    hist_name = hist_key.GetName()
-                    hist = hist_key.ReadObj()
-
-                    # Check if it's a histogram
-                    if isinstance(hist, ROOT.TH1):
-                        # If it's the first time we encounter this histogram, clone it
-                        if hist_name not in combined_dirs_histograms[dir_name_nonum]:
-                            combined_dirs_histograms[dir_name_nonum][hist_name] = []
-                        hist_clone = hist.Clone()
-                        hist_clone.SetDirectory(0)
-                        hist_clone.SetName(f'{hist_name}_{cat_name}')
-                        combined_dirs_histograms[dir_name_nonum][hist_name].append(hist_clone)
-
-            #else: # write the directory to the output file as is
-            #    output_file.cd()
-            #    obj.Write()
-
-
+            if dir_name_nocat not in combined_dirs_histograms:
+                combined_dirs_histograms[dir_name_nocat] = {}
+            for hist_key in obj.GetListOfKeys():
+                hist_name = hist_key.GetName()
+                hist = hist_key.ReadObj()
+                # Check if it's a histogram
+                if isinstance(hist, ROOT.TH1):
+                    # If it's the first time we encounter this histogram, clone it
+                    if hist_name not in combined_dirs_histograms[dir_name_nocat]:
+                        combined_dirs_histograms[dir_name_nocat][hist_name] = []
+                    hist_clone = hist.Clone()
+                    hist_clone.SetDirectory(0)
+                    hist_clone.SetName(f'{hist_name}{cat_name}')
+                    combined_dirs_histograms[dir_name_nocat][hist_name].append(hist_clone)
 
     # Write the combined histograms to the output file
     for dir_name, histograms in combined_dirs_histograms.items():
@@ -104,6 +70,9 @@ def merge_seperate_cats(input_file, output_file):
             print(f'Histogram names: {[hist.GetName() for hist in hists]}')
             if len(hists) > 1:
                 # sort histograms based on _catX at the end of their names
+                hists.sort(key=lambda x: int(x.GetName().split('_')[-1].replace('cat', '')))
+                print('!!!!')
+                print(f'Histogram names: {[hist.GetName() for hist in hists]}')
                 rolled_hist = roll_histograms(hists)
                 rolled_hist.Write(hist_name)
             else:
@@ -114,4 +83,4 @@ def merge_seperate_cats(input_file, output_file):
     output_file.Close()
     input_file.Close()
 
-merge_seperate_cats(output_file, output_file.replace('.root', '_merged.root'))
+merge_seperate_cats(datacard_name, datacard_name.replace('.root', '_merged.root'))
