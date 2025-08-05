@@ -34,7 +34,7 @@ if args.cats: cats=args.cats.split(',')
 
 cmb_card = ch.CombineHarvester()
 if args.datacard:
-  cmb_card.ParseDatacard(args.datacard)
+  cmb_card.ParseDatacard(args.datacard, mass='125')
 
 cmb = ch.CombineHarvester()
 infile = ROOT.TFile(args.workspace)
