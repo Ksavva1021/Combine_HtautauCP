@@ -37,7 +37,7 @@ ulimit -c 0
 Modify the options configs/harvestDatacards.yml as needed and then run
  
 ```
-python3 scripts/harvestDatacards.py 
+python3 scripts/harvestDatacards.py -c configs/harvestDatacards.yml 
 ```
 
 The systematics can be modified in python/systematics.py
@@ -63,4 +63,22 @@ TODO: add instructions for running points as batch jobs
 
 ```
 python3 scripts/plot1DScan.py --main=outputs/cmb/higgsCombine.alpha.MultiDimFit.mH125.root --POI=alpha --output=alpha_cmb --no-numbers --no-box --x-min=-90 --x-max=90 --y-max=8
+```
+
+### making prefit plots
+
+Produce ROOT file containing all prefit histograms:
+```
+python3 python/PostFitShapesCombEras.py -w outputs/cmb/ws.root -d outputs/cmb/combined.txt.cmb 
+```
+
+If we want to show pseudoscalar on the same plot then need to run this again and freeze alpha to 90:
+```
+python3 python/PostFitShapesCombEras.py -w outputs/cmb/ws.root -d outputs/cmb/combined.txt.cmb --output shapes_output_ps.root --freeze alpha=90
+```
+
+Make plots from this scripts setting the -b option to the name of the bin you want to plot:
+
+```
+python3 scripts/postfitPlot.py -b htt_tt_3_13p6TeV
 ```

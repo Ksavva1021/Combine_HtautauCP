@@ -290,7 +290,6 @@ if __name__ == "__main__":
     pads[0].cd()
     pads[0].SetTicks(1)
     if logy:
-        print('minimum signal bin content:', sighist.GetMinimum())
         pads[0].SetLogy()
         sig_min = sighist.GetMinimum()
         if sig_min > 0:
@@ -361,7 +360,7 @@ if __name__ == "__main__":
         # add extra axis for the phiCP angle
         scale = abs(float(ratio_range.split(',')[0])-float(ratio_range.split(',')[1]))/2
         y_axis = 0.3 * scale
-        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,304,"NS")
+        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,300,"NS")
         extra_axis.SetLabelSize(0)
         #extra_axis.SetLabelFont(42)
         extra_axis.SetMaxDigits(2)
@@ -417,5 +416,5 @@ if __name__ == "__main__":
         legend.AddEntry(sighist_ps,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=90^{#circ})","l")
     legend.Draw("same")
     
-    canv.Print('test.pdf')
+    canv.Print(f'{bin_name}.pdf')
     
