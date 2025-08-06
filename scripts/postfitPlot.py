@@ -1,30 +1,10 @@
 import CombineHarvester.CombineTools.plotting as plot
 import ROOT
+import argparse
+import math
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 ROOT.TH1.AddDirectory(False)
-
-# these can eventually be set by command line arguments:
-lumi = '61.9 fb^{-1} (13.6 TeV)'
-bin_name = 'htt_tt_1_13p6TeV'
-channel = 'tt'
-if channel == '':  channel=binname[4:6]
-input_file = ROOT.TFile('shapes_output.root')
-input_file_ps = 'shapes_output_ps.root'
-if input_file_ps:
-    input_file_ps = ROOT.TFile(input_file_ps)
-
-extra_pad = 0.15
-norm_bins = False
-autoblind = 0.02
-ratio_range = '0.5,1.5'
-signal_scale = 100.0
-
-if norm_bins:
-    y_title = 'Events / bin width'
-else: 
-    y_title = 'Events'
-x_title = 'BDT output'
 
 def getHistogram(fname, histname, dirname='', allowEmpty=False):
     outname = fname.GetName()
@@ -117,193 +97,325 @@ def DrawTitleUnrolled(pad, text, align, scale=1):
         latex.DrawLatex(1 - r, y_off, text)
     pad_backup.cd()
 
-is_1d_bin = bin_name in ['htt_mt_1_13p6TeV', 'htt_mt_2_13p6TeV', 'htt_tt_1_13p6TeV', 'htt_tt_2_13p6TeV']
-if is_1d_bin:
-    plot.ModTDRStyle(width=900, height=800, r=0.3, l=0.15)
-#else:
-    #plot.ModTDRStyle(width=1800, height=700, r=0.4, l=0.16, t=0.12,b=0.15)
+if __name__ == "__main__":
 
-canv = ROOT.TCanvas()    
-pads=plot.TwoPadSplit(0.35,0.01,0.01)
+    parser = argparse.ArgumentParser(description='Post-fit plot script for Htautau CP analysis')
+    parser.add_argument('--input_file', '-i',  type=str, default='shapes_output.root',
+                        help='Input ROOT file containing histograms')
+    parser.add_argument('--input_file_ps', type=str, default='shapes_output_ps.root',
+                        help='Input ROOT file containing pseudoscalar histograms (optional)')
+    parser.add_argument('--bin_name', '-b', type=str, default='htt_tt_3_13p6TeV',
+                        help='Name of the bin to plot')
+    parser.add_argument('--autoblind', type=float, default=0.05,
+                        help='Autoblinding threshold for signal/background ratio')
+    parser.add_argument('--norm_bins', action='store_true',
+                        help='Normalize bins to bin width')
+    parser.add_argument('--lumi', type=str, default='61.9 fb^{-1} (13.6 TeV)',
+                        help='Luminosity label for the plot')
 
-bkghist = getHistogram(input_file,'TotalProcs',bin_name)[0]
-bkgonlyhist = getHistogram(input_file,'TotalBkg',bin_name)[0]
+    args = parser.parse_args()
 
-sighist = getHistogram(input_file,'TotalSig',bin_name)[0]
+    # for unrolled 2D plots this map will determine where the vertical lines are drawn to separate the BDT bins
+    # so the numbers should equal the number of phiCP bins in the unrolled plot
+    nxbins_map = {
+        'htt_et_3_13p6TeV': 8,
+        'htt_et_4_13p6TeV': 8,
+        'htt_et_5_13p6TeV': 8,
+        'htt_et_6_13p6TeV': 8,
+        'htt_mt_3_13p6TeV': 8,
+        'htt_mt_4_13p6TeV': 8,
+        'htt_mt_5_13p6TeV': 8,
+        'htt_mt_6_13p6TeV': 8,
+        'htt_tt_3_13p6TeV': 10,
+        'htt_tt_4_13p6TeV': 4,
+        'htt_tt_5_13p6TeV': 4,
+        'htt_tt_6_13p6TeV': 4,
+        'htt_tt_7_13p6TeV': 10,
+        'htt_tt_8_13p6TeV': 4,
+        'htt_tt_9_13p6TeV': 4,
+        'htt_tt_10_13p6TeV': 4,
+        'htt_tt_11_13p6TeV': 4,
+    }
 
-# if pseudoscalar file is provided then prdoduce a signal histogram from it and average it with the scalar one for the autoblinding
-# if it isn't provided then just use the scalar one
-if input_file_ps:
-    sighist_ps = getHistogram(input_file_ps,'TotalSig',bin_name)[0]
-    ave_sig = sighist.Clone()
-    ave_sig.Add(sighist_ps)
-    ave_sig.Scale(0.5)
-else :
-    sighist_ps = None
-    ave_sig = sighist.Clone()
-
-datahist = getHistogram(input_file,"data_obs",bin_name)[0]
-datahist.SetMarkerStyle(20)
-
-if autoblind:
-    # get rid of any data bins when the ave_sig/bkghist fraction is > autoblind by settinfg the yield to -0.1 and the error to 0
-    for i in range(1, datahist.GetNbinsX()+1):
-        if bkghist.GetBinContent(i) == 0: blind = True
-        elif ave_sig.GetBinContent(i) / bkghist.GetBinContent(i) > autoblind: blind = True
-        else: blind = False
-        if blind:
-            datahist.SetBinContent(i, -0.1)
-            datahist.SetBinError(i, 0)
-
-bkghist.SetMarkerSize(0)
-bkghist.SetFillColor(2001)
-bkghist.SetLineColor(0)
-bkghist.SetLineWidth(1)
-bkghist.SetFillColor(plot.CreateTransparentColor(12,0.4))
-bkgonlyhist.SetMarkerSize(0)
-bkgonlyhist.SetFillColor(2001)
-bkgonlyhist.SetLineColor(0)
-bkgonlyhist.SetLineWidth(1)
-bkgonlyhist.SetFillColor(plot.CreateTransparentColor(12,0.4))
-if norm_bins: 
-    bkghist.Scale(1.0,"width")
-    bkgonlyhist.Scale(1.0,"width")
-    sighist.Scale(1.0,"width")
-    datahist.Scale(1.0,"width")
-
-background_schemes = {
-    'mt':[
-            backgroundComp("H#rightarrow#tau#tau",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
-            backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)),
-            backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(192,232,100)),
-            backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(248,206,104)),
-            ],
-    'tt':[
-            backgroundComp("H#rightarrow#tau#tau",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
-            backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)),
-            backgroundComp("Jet#rightarrow#tau_{h} fakes",['JetFakes','JetFakesSublead'],ROOT.TColor.GetColor(192,232,100)),
-            backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(248,206,104)),
-            ],
-}
-background_schemes['et'] = background_schemes['mt']
-
-stack_histos = []
-
-for t in background_schemes[channel]:
-    plots = t['plot_list']
-    isHist = False
-    h = ROOT.TH1F()
-    for k in plots:
-        if h.GetEntries()==0 and getHistogram(input_file,k, bin_name,False) is not None:
-            isHist = True
-            h = getHistogram(input_file,k, bin_name)[0]
-            h.SetName(k)
-        else:
-            if getHistogram(input_file,k, bin_name,False) is not None:
-                isHist = True
-                h.Add(getHistogram(input_file,k, bin_name)[0])
-
-    h.SetFillColor(t['colour'])
-    h.SetLineColor(ROOT.kBlack)
-    h.SetMarkerSize(0)
+    # these can eventually be set by command line arguments:
+    lumi = args.lumi
+    bin_name = args.bin_name
+    channel = bin_name[4:6]
+    input_file = ROOT.TFile(args.input_file)
+   
+    if args.input_file_ps:
+        input_file_ps = ROOT.TFile(args.input_file_ps)
+    else: input_file_ps = None
+    autoblind = args.autoblind
+    norm_bins = args.norm_bins
     
-    if norm_bins: h.Scale(1.0,"width")
-    if isHist:
-        stack_histos.append(h)
+    ratio_range = '0.5,1.5'
+    signal_scale = 1.0
+    
+    if norm_bins:
+        y_title = 'Events / bin width'
+    else: 
+        y_title = 'Events'
+    
+    is_1d_bin = bin_name in ['htt_mt_1_13p6TeV', 'htt_mt_2_13p6TeV', 'htt_tt_1_13p6TeV', 'htt_tt_2_13p6TeV']
+    if is_1d_bin:
+        plot.ModTDRStyle(width=900, height=800, r=0.3, l=0.15)
+        x_title = 'BDT score'
+        logy = False
+        extra_pad = 0.15
+    else:
+        plot.ModTDRStyle(width=1800, height=700, r=0.3, l=0.16, t=0.12,b=0.15)
+        x_title = 'Bin number'
+        logy = True
+        extra_pad = 0.5
+    
+    canv = ROOT.TCanvas()    
+    pads=plot.TwoPadSplit(0.35,0.01,0.01)
+    
+    bkghist = getHistogram(input_file,'TotalProcs',bin_name)[0]
+    bkgonlyhist = getHistogram(input_file,'TotalBkg',bin_name)[0]
+    
+    sighist = getHistogram(input_file,'TotalSig',bin_name)[0]
+    
+    # if pseudoscalar file is provided then prdoduce a signal histogram from it and average it with the scalar one for the autoblinding
+    # if it isn't provided then just use the scalar one
+    if input_file_ps:
+        sighist_ps = getHistogram(input_file_ps,'TotalSig',bin_name)[0]
+        ave_sig = sighist.Clone()
+        ave_sig.Add(sighist_ps)
+        ave_sig.Scale(0.5)
+    else :
+        sighist_ps = None
+        ave_sig = sighist.Clone()
+    
+    datahist = getHistogram(input_file,"data_obs",bin_name)[0]
+    datahist.SetMarkerStyle(20)
+    
+    if autoblind:
+        # get rid of any data bins when the ave_sig/bkghist fraction is > autoblind by settinfg the yield to -0.1 and the error to 0
+        for i in range(1, datahist.GetNbinsX()+1):
+            if bkghist.GetBinContent(i) == 0: blind = True
+            elif ave_sig.GetBinContent(i) / bkghist.GetBinContent(i) > autoblind: blind = True
+            else: blind = False
+            if blind:
+                datahist.SetBinContent(i, -0.1)
+                datahist.SetBinError(i, 0)
+    
+    bkghist.SetMarkerSize(0)
+    bkghist.SetFillColor(2001)
+    bkghist.SetLineColor(0)
+    bkghist.SetLineWidth(1)
+    bkghist.SetFillColor(plot.CreateTransparentColor(12,0.4))
+    bkgonlyhist.SetMarkerSize(0)
+    bkgonlyhist.SetFillColor(2001)
+    bkgonlyhist.SetLineColor(0)
+    bkgonlyhist.SetLineWidth(1)
+    bkgonlyhist.SetFillColor(plot.CreateTransparentColor(12,0.4))
+    if norm_bins: 
+        bkghist.Scale(1.0,"width")
+        bkgonlyhist.Scale(1.0,"width")
+        sighist.Scale(1.0,"width")
+        datahist.Scale(1.0,"width")
+    
+    background_schemes = {
+        'mt':[
+                backgroundComp("Others",["ZL","VVT","TT"],ROOT.TColor.GetColor(100,192,232)), ###TODO changed this to TT once the template is named correctly!!!
+                backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(192,232,100)),
+                backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(248,206,104)),
+                backgroundComp("H#rightarrow#tau#tau",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                ],
+        'tt':[
+                backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)),
+                backgroundComp("Jet#rightarrow#tau_{h} fakes",['JetFakes','JetFakesSublead'],ROOT.TColor.GetColor(192,232,100)),
+                backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(248,206,104)),
+                backgroundComp("H#rightarrow#tau#tau",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                ],
+    }
+    background_schemes['et'] = background_schemes['mt']
+    
+    stack_histos = []
+    
+    for t in background_schemes[channel]:
+        plots = t['plot_list']
+        isHist = False
+        h = ROOT.TH1F()
+        for k in plots:
+            if h.GetEntries()==0 and getHistogram(input_file,k, bin_name,False) is not None:
+                isHist = True
+                h = getHistogram(input_file,k, bin_name)[0]
+                h.SetName(k)
+            else:
+                if getHistogram(input_file,k, bin_name,False) is not None:
+                    isHist = True
+                    h.Add(getHistogram(input_file,k, bin_name)[0])
+    
+        h.SetFillColor(t['colour'])
+        h.SetLineColor(ROOT.kBlack)
+        h.SetMarkerSize(0)
+        
+        if norm_bins: h.Scale(1.0,"width")
+        if isHist:
+            stack_histos.append(h)
+    
+    stack = ROOT.THStack("hs","")
+    for hists in stack_histos:
+        stack.Add(hists)
+    
+    signal_stack = ROOT.THStack("hs_sig","")
+    if sighist.GetEntries() > 0:
+        sighist.SetFillStyle(0)
+        sighist.SetLineColor(ROOT.kRed)
+        sighist.SetLineWidth(2)
+        if norm_bins: sighist.Scale(1.0,"width")
+        sighist.Scale(signal_scale)
+        signal_stack.Add(sighist)
+    if sighist_ps and sighist_ps.GetEntries() > 0:
+        sighist_ps.SetFillStyle(0)
+        sighist_ps.SetLineColor(ROOT.kBlue)
+        sighist_ps.SetLineWidth(2)
+        if norm_bins: sighist_ps.Scale(1.0,"width")
+        sighist_ps.Scale(signal_scale)
+        signal_stack.Add(sighist_ps)
+    
+    axish = createAxisHists(2,bkghist,bkghist.GetXaxis().GetXmin(),bkghist.GetXaxis().GetXmax()-0.01)
+    axish[0].SetMaximum(bkghist.GetMaximum())
+    axish[0].GetYaxis().SetTitle(y_title)
+    axish[0].GetXaxis().SetLabelSize(0)
+    axish[0].GetXaxis().SetTitleSize(0)
+    axish[1].GetXaxis().SetTitle(x_title)
+    if not is_1d_bin:
+        axish[1].GetXaxis().SetTitleOffset(1.0)
+    
+    
+    pads[0].cd()
+    pads[0].SetTicks(1)
+    if logy:
+        print('minimum signal bin content:', sighist.GetMinimum())
+        pads[0].SetLogy()
+        sig_min = sighist.GetMinimum()
+        if sig_min > 0:
+            axish[0].SetMinimum(0.5*sig_min)
+        else:
+            axish[0].SetMinimum(0.01)
+    
+        #axish[0].SetMinimum(0.01)
+    axish[0].Draw("hist")
+    
+    stack.Draw("histsame")
+    bkghist.Draw("e2same")
+    signal_stack.Draw("histsamenostack")
+    datahist.Draw("P Z 0 same")
 
-stack = ROOT.THStack("hs","")
-for hists in stack_histos:
-    stack.Add(hists)
+    pads[0].RedrawAxis()
+    
+    # now we produce the ratio plot
+    # For now the ratio just shows the ratio of the observed data to the signal+background expectation
+    # this can be changed in the future to show the ratio to background only and signal+background etc seperatly 
+    
+    pads[1].cd()
+    pads[1].SetTicks(1)
+    pads[1].SetGrid(0,1)
+    axish[1].Draw("axis")
+    axish[1].SetMinimum(float(ratio_range.split(',')[0]))
+    axish[1].SetMaximum(float(ratio_range.split(',')[1]))
+    axish[1].GetYaxis().SetTitle("Obs./Exp.")
+    # draw dashed line at 1
+    line = ROOT.TLine(axish[1].GetXaxis().GetXmin(), 1, axish[1].GetXaxis().GetXmax(), 1)
+    line.SetLineStyle(2)
+    line.SetLineColor(ROOT.kBlack)
+    line.Draw("same")
+    
+    ratio_bkghist = plot.MakeRatioHist(bkghist,bkghist,True,False)
+    ratio_bkghist.Draw("e2same")
+    ratio_datahist = plot.MakeRatioHist(datahist,bkghist,True,False)
+    ratio_datahist.Draw("P Z 0 same")
+    #sbhist = bkghist.Clone()
+    #sbhist.SetLineColor(ROOT.kRed)
+    #sbhist.SetLineWidth(2)
+    #sbhist.SetFillStyle(0)
+    #ratio_sighist = plot.MakeRatioHist(sbhist,bkghist,True,False)
+    #ratio_sighist.Draw("histsame")
+    pads[1].RedrawAxis()
 
-signal_stack = ROOT.THStack("hs_sig","")
-if sighist.GetEntries() > 0:
-    sighist.SetFillStyle(0)
-    sighist.SetLineColor(ROOT.kRed)
-    sighist.SetLineWidth(2)
-    if norm_bins: sighist.Scale(1.0,"width")
-    sighist.Scale(signal_scale)
-    signal_stack.Add(sighist)
-if sighist_ps and sighist_ps.GetEntries() > 0:
-    sighist_ps.SetFillStyle(0)
-    sighist_ps.SetLineColor(ROOT.kBlue)
-    sighist_ps.SetLineWidth(2)
-    if norm_bins: sighist_ps.Scale(1.0,"width")
-    sighist_ps.Scale(signal_scale)
-    signal_stack.Add(sighist_ps)
+    Nxbins = nxbins_map[bin_name] if bin_name in nxbins_map else None
+    if not is_1d_bin and Nxbins:
+        # add lines to seperate BDT bins
+        yline = ROOT.TLine()
+        yline.SetLineWidth(2)
+        yline.SetLineStyle(3)
+        yline.SetLineColor(1)
+        x = int(bkghist.GetNbinsX()/Nxbins)
+        for l in range(1,x):
+            pads[0].cd()
+            ymax = axish[0].GetMaximum()
+            ymin = axish[0].GetMinimum()
+            fraction = extra_pad if extra_pad>0 else 0.15
+            ymax = (ymax - fraction * ymin) / (1. - fraction)
+            yline.DrawLine(l*Nxbins,ymin,l*Nxbins,ymax)
 
-axish = createAxisHists(2,bkghist,bkghist.GetXaxis().GetXmin(),bkghist.GetXaxis().GetXmax()-0.01)
-axish[0].SetMaximum((extra_pad+1)*bkghist.GetMaximum())
-axish[0].GetYaxis().SetTitle(y_title)
-axish[0].GetXaxis().SetLabelSize(0)
-axish[0].GetXaxis().SetTitleSize(0)
-axish[1].GetXaxis().SetTitle(x_title)
+            pads[1].cd()
+            ymax = axish[1].GetMaximum()
+            ymin = axish[1].GetMinimum()
+            yline.DrawLine(l*Nxbins,ymin,l*Nxbins,ymax) 
 
+        # add extra axis for the phiCP angle
+        scale = abs(float(ratio_range.split(',')[0])-float(ratio_range.split(',')[1]))/2
+        y_axis = 0.3 * scale
+        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,304,"NS")
+        extra_axis.SetLabelSize(0)
+        #extra_axis.SetLabelFont(42)
+        extra_axis.SetMaxDigits(2)
+        extra_axis.SetTitle("#phi_{CP}")
+        extra_axis.SetTitleFont(42)
+        extra_axis.SetTitleSize(0.035)
+        extra_axis.SetTitleOffset(1.05)
+        extra_axis.SetTickSize(0.08)
+        extra_axis.Draw()  
 
-pads[0].cd()
-pads[0].SetTicks(1)
-axish[0].Draw("hist")
+        positions = [-math.pi, -math.pi/2, 0, math.pi/2, math.pi]
+        labels = ["-#pi", "-#pi/2", "0", "#pi/2", "#pi"]
+        
+        # Use TLatex to manually draw labels
+        latex = ROOT.TLatex()
+        latex.SetTextSize(0.035)
+        latex.SetTextFont(42)
+        latex.SetTextAlign(21)
+        
+        # Map axis positions to pad x-coordinates
+        for i, xval in enumerate(positions):
+            x_pixel = (xval + math.pi) / (2 * math.pi) * Nxbins  # from axis range to pixel
+            latex.DrawLatex(x_pixel, y_axis - 0.3 * scale, labels[i])  # adjust vertical offset as needed
 
-stack.Draw("histsame")
-bkghist.Draw("e2same")
-signal_stack.Draw("histsamenostack")
-datahist.Draw("P Z 0 same")
-pads[0].RedrawAxis()
-
-# now we produce the ratio plot
-# For now the ratio just shows the ratio of the observed data to the signal+background expectation
-# this can be changed in teh future to show the ratio to background only and signal+background etc seperatly 
-
-pads[1].cd()
-pads[1].SetTicks(1)
-pads[1].SetGrid(0,1)
-axish[1].Draw("axis")
-axish[1].SetMinimum(float(ratio_range.split(',')[0]))
-axish[1].SetMaximum(float(ratio_range.split(',')[1]))
-axish[1].GetYaxis().SetTitle("Obs./Exp.")
-# draw dashed line at 1
-line = ROOT.TLine(axish[1].GetXaxis().GetXmin(), 1, axish[1].GetXaxis().GetXmax(), 1)
-line.SetLineStyle(2)
-line.SetLineColor(ROOT.kBlack)
-line.Draw("same")
-
-ratio_bkghist = plot.MakeRatioHist(bkghist,bkghist,True,False)
-ratio_bkghist.Draw("e2same")
-ratio_datahist = plot.MakeRatioHist(datahist,bkghist,True,False)
-ratio_datahist.Draw("P Z 0 same")
-#sbhist = bkghist.Clone()
-#sbhist.SetLineColor(ROOT.kRed)
-#sbhist.SetLineWidth(2)
-#sbhist.SetFillStyle(0)
-#ratio_sighist = plot.MakeRatioHist(sbhist,bkghist,True,False)
-#ratio_sighist.Draw("histsame")
-pads[1].RedrawAxis()
-
-# draw the title, labels, and legend
-
-#CMS and lumi labels
-extra='Preliminary'
-if is_1d_bin:
-    plot.DrawCMSLogo(pads[0], 'CMS', extra, 0, 0.07, -0.0, 2.0, '', 0.85)
-    plot.DrawTitle(pads[0], lumi, 3, textSize=0.6)
-else:
-    plot.DrawCMSLogo(pads[0], 'CMS', extra, 0, 0.07, -0.0, 2.0, '', 0.6)
-    DrawTitleUnrolled(pads[0], lumi, 3, scale=0.7)
-
-legend = PositionedLegendUnrolled(0.25,0.5,7,0.)
-legend.SetTextSize(0.03) 
-legend.SetTextFont(42)
-legend.SetFillStyle(0)
-
-legend.AddEntry(datahist,"Observed","PEl")
-# loop backwards over the stack_histos by index to add them in the right order
-for legi in range(len(stack_histos)-1,-1,-1):
-    hists = stack_histos[legi]
-    legend.AddEntry(hists,background_schemes[channel][legi]['leg_text'],"f")
-
-legend.AddEntry(bkghist,"Uncertainty","f")
-legend.AddEntry(sighist,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})","l")
-if sighist_ps:
-    legend.AddEntry(sighist_ps,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=90^{#circ})","l")
-legend.Draw("same")
-
-canv.Print('test.pdf')
+    # draw the title, labels, and legend
+    
+    #CMS and lumi labels
+    plot.FixTopRange(pads[0], plot.GetPadYMax(pads[0]), extra_pad if extra_pad>0 else 0.15)
+    extra='Preliminary'
+    if is_1d_bin:
+        plot.DrawCMSLogo(pads[0], 'CMS', extra, 0, 0.17, -0.0, 2.0, '', 0.85)
+        plot.DrawTitle(pads[0], lumi, 3, textSize=0.6)
+    else:
+        plot.DrawCMSLogo(pads[0], 'CMS', extra, 0, 0.075, -0.0, 2.0, '', 0.6)
+        DrawTitleUnrolled(pads[0], lumi, 3, scale=0.7)
+    if is_1d_bin:
+        legend = PositionedLegendUnrolled(0.25,0.5,7,0.)
+    else:
+        legend = PositionedLegendUnrolled(0.11,0.5,7,0.)
+    legend.SetTextSize(0.03) 
+    legend.SetTextFont(42)
+    legend.SetFillStyle(0)
+    
+    legend.AddEntry(datahist,"Observed","PEl")
+    # loop backwards over the stack_histos by index to add them in the right order
+    for legi in range(len(stack_histos)-1,-1,-1):
+        hists = stack_histos[legi]
+        legend.AddEntry(hists,background_schemes[channel][legi]['leg_text'],"f")
+    
+    legend.AddEntry(bkghist,"Uncertainty","f")
+    legend.AddEntry(sighist,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})","l")
+    if sighist_ps:
+        legend.AddEntry(sighist_ps,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=90^{#circ})","l")
+    legend.Draw("same")
+    
+    canv.Print('test.pdf')
+    
