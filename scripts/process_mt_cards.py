@@ -1,9 +1,7 @@
 import ROOT
 import os
-from hadd_cp_datacards import hadd_root_files
 
-datacard_name = 'mt_2022_2023preBPix.root'
-
+datacard_name = 'mt_2022_2023.root'
 
 def roll_histograms(hists):
     # get total number of bins of all histograms
@@ -31,7 +29,6 @@ def merge_seperate_cats(input_file, output_file):
     # Loop through all keys in the input file
     for key in input_file.GetListOfKeys():
         obj = key.ReadObj()
-        print(key.GetName())
         if isinstance(obj, ROOT.TDirectoryFile):
             dir_name = key.GetName()
             #hist_name = obj.GetName()
@@ -62,23 +59,15 @@ def merge_seperate_cats(input_file, output_file):
     for dir_name, histograms in combined_dirs_histograms.items():
         output_file.mkdir(dir_name)
         output_file.cd(dir_name)
-        print(f'Writing directory {dir_name}')
-        print(histograms)
+
         for hist_name, hists in histograms.items():
-            print(f'Writing histogram {hist_name} with {len(hists)} histograms')
-            print(f'Histograms: {hists}')
-            print(f'Histogram names: {[hist.GetName() for hist in hists]}')
             if len(hists) > 1:
                 # sort histograms based on _catX at the end of their names
                 hists.sort(key=lambda x: int(x.GetName().split('_')[-1].replace('cat', '')))
-                print('!!!!')
-                print(f'Histogram names: {[hist.GetName() for hist in hists]}')
                 rolled_hist = roll_histograms(hists)
                 rolled_hist.Write(hist_name)
             else:
                 hists[0].Write(hist_name)
-        #print(f'Writing directory {dir_name} with {len(histograms)} histograms')
-        #print(histograms)
 
     output_file.Close()
     input_file.Close()
