@@ -360,7 +360,7 @@ if __name__ == "__main__":
         # add extra axis for the phiCP angle
         scale = abs(float(ratio_range.split(',')[0])-float(ratio_range.split(',')[1]))/2
         y_axis = 0.3 * scale
-        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,300,"NS")
+        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,400,"NS")
         extra_axis.SetLabelSize(0)
         #extra_axis.SetLabelFont(42)
         extra_axis.SetMaxDigits(2)
