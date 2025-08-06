@@ -53,8 +53,8 @@ if Run2:
 
 else: 
     # define background processes
-    bkg_procs = ['ZTT','ZL','TTT','VVT','QCD','ZJ','TTJ','VVJ','W']
-    fake_procs = ['JetFakes','QCD','W','TTJ','VVJ','ZJ']
+    bkg_procs = ['ZTT','ZL','TTT','VVT','JetFakes','JetFakesSublead']
+    fake_procs = ['JetFakes','JetFakesSublead']
 
     bkg_procs_mt = ['ZTT','TT','VVT','JetFakes'] ###TEMP
 
@@ -137,7 +137,7 @@ else:
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     elif chn == 'tt': filename = '%s/added_histo_Run2Bins-mergeXbins.root' % (input_folder)
-    elif chn == 'mt': filename = '%s/mt_2022_2023preBPix_merged.root' % (input_folder)
+    elif chn == 'mt': filename = '%s/mt_2022_2023_merged.root' % (input_folder)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
@@ -368,5 +368,9 @@ writer.WriteCards("murho",  cb.cp().channel({"mt"}).bin_id({1,2,3}))
 writer.WriteCards("mupi", cb.cp().channel({"mt"}).bin_id({1,2,4}))
 writer.WriteCards("mua1", cb.cp().channel({"mt"}).bin_id({1,2,5}))
 #writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6})) ###TEMP
+
+writer.WriteCards("mt", cb.cp().channel({"mt"}))
+writer.WriteCards("tt", cb.cp().channel({"tt"}))
+
 
 
