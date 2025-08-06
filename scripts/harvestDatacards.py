@@ -211,7 +211,7 @@ else:
     if merge_mode == 1:
         bbb_sym.MergeAndAdd(cb.cp().bin_id([1,2], False).backgrounds(), cb)
     else:
-        for chns in chans:
+        for chn in chans:
             for cat in cats[chn]:
                 if cat[1] in flat_cats:
                     bbb_flat.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False), cb)
@@ -230,7 +230,7 @@ else:
     mt_nxbins = [1, 1, 8, 8, 8, 8]
 
     for chan in chans:
-        bins = tt_nxbins if ch == "tt" else mt_nxbins
+        bins = tt_nxbins if chan == "tt" else mt_nxbins
         for i, nxbins in enumerate(bins):
             if nxbins <= 1:
                 continue
