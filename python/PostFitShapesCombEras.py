@@ -227,9 +227,6 @@ for bin in bins_grouped:
 
   # add contributions together and write them to the file
   for s in shapes_tot[1:]: shapes_tot[0].Add(s)
-  fout.cd(dirname)
-  shapes_tot[0].SetName('TotalProcs')
-  shapes_tot[0].Write('TotalProcs')
 
   # get total background and propper uncertainty 
 
@@ -262,6 +259,11 @@ for bin in bins_grouped:
     shape = shape.Rebin(len(common_bins)-1, '', common_bins)
     shapes_bkg[0]=shape.Clone()
 
+    shape_total = cmb_bin.cp().bin(bins).GetShapeWithUncertainty()
+    if args.datacard: shape_total = RestoreBinning(shape_total, ref)
+    shape_total = shape_total.Rebin(len(common_bins)-1, '', common_bins)
+    shapes_tot[0]=shape_total.Clone()
+
     err = cmb_bin.cp().bin(bins).backgrounds().GetUncertainty()
     print('Total Bkg = %.1f +/- %.1f (%.3f)' % (rate, err, err/rate))
 
@@ -275,6 +277,7 @@ for bin in bins_grouped:
       p_vec[n] = cmb_bin.cp().bin([b]).GetParameter(rands[n].GetName())
   
     ave=0.
+    ave_tot=0.
 
     for x in range(0, samples):
   
@@ -283,37 +286,57 @@ for bin in bins_grouped:
         if p_vec[n]: p_vec[n].set_val(rands[n].getVal())
   
       shapes_bkg_var = []
+      shapes_tot_var = []
       for b in bins:
         shape = cmb_bin.cp().bin([b]).backgrounds().GetShape()
-        if args.datacard: shape = RestoreBinning(shape, ref)
+        shape_total = cmb_bin.cp().bin([b]).GetShape()
+        if args.datacard: 
+          shape = RestoreBinning(shape, ref)
+          shape_total = RestoreBinning(shape_total, ref)
         shape = shape.Rebin(len(common_bins)-1, '', common_bins)
         shape = ZeroErrors(shape) # zero errors to avoid confusion about what they represent
         shapes_bkg_var.append(shape.Clone())
+        shape_total = shape_total.Rebin(len(common_bins)-1, '', common_bins)
+        shape_total = ZeroErrors(shape_total) # zero errors to avoid confusion about what they represent
+        shapes_tot_var.append(shape_total.Clone())
   
       for s in shapes_bkg_var[1:]: shapes_bkg_var[0].Add(s)
       ave+=abs(shapes_bkg_var[0].Integral()-shapes_bkg[0].Integral())**2
+      for s in shapes_tot_var[1:]: shapes_tot_var[0].Add(s)
+      ave_tot+=abs(shapes_tot_var[0].Integral()-shapes_tot[0].Integral())**2
   
   
       for i in range(1, shapes_bkg[0].GetNbinsX()+1):
         err = abs(shapes_bkg_var[0].GetBinContent(i)-shapes_bkg[0].GetBinContent(i))
         shapes_bkg[0].SetBinError(i, err*err + shapes_bkg[0].GetBinError(i))
+
+      for i in range(1, shapes_tot[0].GetNbinsX()+1):
+        err = abs(shapes_tot_var[0].GetBinContent(i)-shapes_tot[0].GetBinContent(i))
+        shapes_tot[0].SetBinError(i, err*err + shapes_tot[0].GetBinError(i))
   
     # now need to set parameters back to nominal values
     cmb.UpdateParameters(res_backup)
   
     ave = (ave/float(samples))**.5
     print('Total Bkg = %.1f +/- %.1f (%.3f)' % (shapes_bkg[0].Integral(), ave, ave/shapes_bkg[0].Integral()))
+    ave_tot = (ave_tot/float(samples))**.5
+    print('Total Procs = %.1f +/- %.1f (%.3f)' % (shapes_tot[0].Integral(), ave_tot, ave_tot/shapes_tot[0].Integral()))
   
     # to get the final error we need to take the sqrt and divide by the number of samples
     for i in range(1, shapes_bkg[0].GetNbinsX()+1):
       err_total = (shapes_bkg[0].GetBinError(i)/float(samples))**.5
       shapes_bkg[0].SetBinError(i,err_total)
+      
+    for i in range(1, shapes_tot[0].GetNbinsX()+1):
+      err_total = (shapes_tot[0].GetBinError(i)/float(samples))**.5
+      shapes_tot[0].SetBinError(i,err_total)
 
   # now save our total background template with correct uncertainties
   fout.cd(dirname)
   shapes_bkg[0].SetName('TotalBkg')
   shapes_bkg[0].Write('TotalBkg')
-
+  shapes_tot[0].SetName('TotalProcs')
+  shapes_tot[0].Write('TotalProcs')
 
 fout.Close()
 
