@@ -2,6 +2,7 @@ import ROOT
 import os
 
 datacard_name = 'mt_2022_2023.root'
+#datacard_name = 'mt_2022preEE.root'
 
 def roll_histograms(hists):
     # get total number of bins of all histograms
@@ -14,6 +15,7 @@ def roll_histograms(hists):
     for hist in hists:
         for bin in range(1, hist.GetNbinsX() + 1):
             rolled_hist.SetBinContent(bin + bin_offset, hist.GetBinContent(bin))
+            rolled_hist.SetBinError(bin + bin_offset, hist.GetBinError(bin))
         bin_offset += hist.GetNbinsX()
 
     return rolled_hist
