@@ -14,12 +14,12 @@ cp_bins = {
         "tt_mva_higgs": 1,
         "tt_higgs_pia1" : 4,
         "tt_higgs_a11pra1" : 4,
-        "tt_higgs_rhoa1" : 4,
+        "tt_higgs_rhoa1" : 10,
         "tt_higgs_pia11pr" : 4,
         "tt_higgs_pirho" : 10,
         "tt_higgs_a1a1" : 4,
         "tt_higgs_pipi" : 4,
-        "tt_higgs_rhoa11pr" : 4,
+        "tt_higgs_rhoa11pr" : 10,
         "tt_higgs_rhorho" : 10,
 }
 

@@ -226,7 +226,7 @@ else:
     # If these numbers aren't set correctly the method won't work so be careful!
     # Note that the merging is now only performed for the templates that have a flat distribution
 
-    tt_nxbins = [1, 1, 10, 4, 4, 4, 10, 4, 4, 4, 4]  
+    tt_nxbins = [1, 1, 10, 10, 10, 4, 10, 4, 4, 4, 4]
     mt_nxbins = [1, 1, 8, 8, 8, 8]
 
     for chan in chans:
