@@ -56,7 +56,7 @@ else:
     bkg_procs = ['ZTT','ZL','TTT','VVT','JetFakes','JetFakesSublead']
     fake_procs = ['JetFakes','JetFakesSublead']
 
-    bkg_procs_mt = ['ZTT','TT','VVT','JetFakes'] ###TEMP
+    bkg_procs_mt = ['ZTT','ZL','TTT','VVT','JetFakes'] ###TEMP
 
     # define signal processes, which are the same for every channel
     sig_procs = {}
@@ -64,7 +64,7 @@ else:
     sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_htt','WH_mm_htt','ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
 
     sig_procs_mt = {} ###TEMP
-    sig_procs_mt['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_ps_htt','ggH_mm_prod_mm_htt'] ###TEMP
+    sig_procs_mt['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt'] ###TEMP
     sig_procs_mt['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt'] ###TEMP
 
     # define categories which can depend on the channel
@@ -132,7 +132,7 @@ else:
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     elif chn == 'tt': filename = '%s/added_histo_Run2Bins-mergeXbins.root' % (input_folder)
-    elif chn == 'mt': filename = '%s/mt_2022_2023_merged.root' % (input_folder)
+    elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
@@ -362,7 +362,7 @@ writer.WriteCards("a11pra1",  cb.cp().channel({"tt"}).bin_id({1,2,11}))
 writer.WriteCards("murho",  cb.cp().channel({"mt"}).bin_id({1,2,3}))
 writer.WriteCards("mupi", cb.cp().channel({"mt"}).bin_id({1,2,4}))
 writer.WriteCards("mua1", cb.cp().channel({"mt"}).bin_id({1,2,5}))
-#writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6})) ###TEMP
+writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6})) 
 
 writer.WriteCards("mt", cb.cp().channel({"mt"}))
 writer.WriteCards("tt", cb.cp().channel({"tt"}))
