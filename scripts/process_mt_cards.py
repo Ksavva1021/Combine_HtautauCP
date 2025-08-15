@@ -35,8 +35,9 @@ def merge_seperate_cats(input_file, output_file):
             #hist_name = obj.GetName()
 
             if 'cat' in dir_name:
-                dir_name_nocat = '_'.join(dir_name.split('_')[2:])
-                cat_name = '_'+dir_name.split('_')[1]
+                dir_name_split = dir_name.split('_')
+                cat_name = '_'+dir_name_split.pop(-2)
+                dir_name_nocat = '_'.join(dir_name_split)
             else: 
                 dir_name_nocat = dir_name
                 cat_name = ''
@@ -53,6 +54,7 @@ def merge_seperate_cats(input_file, output_file):
                         combined_dirs_histograms[dir_name_nocat][hist_name] = []
                     hist_clone = hist.Clone()
                     hist_clone.SetDirectory(0)
+                    print(hist_name, cat_name)
                     hist_clone.SetName(f'{hist_name}{cat_name}')
                     combined_dirs_histograms[dir_name_nocat][hist_name].append(hist_clone)
 
@@ -64,6 +66,7 @@ def merge_seperate_cats(input_file, output_file):
         for hist_name, hists in histograms.items():
             if len(hists) > 1:
                 # sort histograms based on _catX at the end of their names
+                print(hists[0].GetName())
                 hists.sort(key=lambda x: int(x.GetName().split('_')[-1].replace('cat', '')))
                 rolled_hist = roll_histograms(hists)
                 rolled_hist.Write(hist_name)

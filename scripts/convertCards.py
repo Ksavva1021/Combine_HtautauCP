@@ -21,12 +21,12 @@ cp_bins = {
         "tt_higgs_pipi" : 4,
         "tt_higgs_rhoa11pr" : 10,
         "tt_higgs_rhorho" : 10,
-        "tautau": 1,
-        "fake": 1,
-        "tau2a1_3pr": 10,
-        "tau2a1": 8,
-        "tau2pi": 8,
-        "tau2rho": 10
+        "mt_mva_tau": 1,
+        "mt_mva_fake": 1,
+        "mt_mva_higgs_mua1": 10,
+        "mt_mva_higgs_mua11pr": 8,
+        "mt_mva_higgs_mupi": 8,
+        "mt_mva_higgs_murho": 10
 }
 
 test_results_sym = {}

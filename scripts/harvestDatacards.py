@@ -84,18 +84,13 @@ else:
             ]
 
     cats['mt'] = [
-            (1, 'tautau'),
-            (2, 'fake'),
-            (3, 'tau2rho'),
-            (4, 'tau2pi'),
-            (5, 'tau2a1_3pr'),
-            #(6, 'tau2a1'),
+            (1, 'mt_mva_tau'),
+            (2, 'mt_mva_fake'),
+            (3, 'mt_mva_higgs_murho'),
+            (4, 'mt_mva_higgs_mupi'),
+            (5, 'mt_mva_higgs_mua1'),
+            (6, 'mt_mva_higgs_mua11pr'),
             ]
-
-    # note in Run-2 only 3 and 8 had 10 CP bins, rest used 4
-    # but based on event numbers could use 10 for category 4 and 5 as well 
-
-
 
 # Create an empty CombineHarvester instance
 cb = ch.CombineHarvester()
@@ -227,7 +222,7 @@ else:
     # Note that the merging is now only performed for the templates that have a flat distribution
 
     tt_nxbins = [1, 1, 10, 10, 10, 4, 10, 4, 4, 4, 4]
-    mt_nxbins = [1, 1, 8, 8, 8, 8]
+    mt_nxbins = [1, 1, 10, 8, 10, 8]
 
     for chan in chans:
         bins = tt_nxbins if chan == "tt" else mt_nxbins

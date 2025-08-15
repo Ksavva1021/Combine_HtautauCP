@@ -32,6 +32,24 @@ scram b -j8
 ulimit -c 0
 ```
 
+### Pre-process datacards
+
+The current mt datacard format requires the BDT bin categories to be combined into one histogram, this is done by the following script:
+
+```
+python3 scripts/process_mt_cards.py
+```
+
+Note the datacard directory and name needs to be changed in the script
+
+Then apply flattening/symmetrisation to datacards for both mt and tt channels using: 
+
+```
+python3 scripts/convertCards.py -f  cpdatacards/mt_2022_2023_merged.root
+python3 scripts/convertCards.py -f  cpdatacards/added_histo_Run2Bins.root
+
+```
+
 ### Produce txt datacards
 
 Modify the options configs/harvestDatacards.yml as needed and then run

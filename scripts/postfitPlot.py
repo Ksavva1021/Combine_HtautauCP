@@ -118,13 +118,13 @@ if __name__ == "__main__":
     # for unrolled 2D plots this map will determine where the vertical lines are drawn to separate the BDT bins
     # so the numbers should equal the number of phiCP bins in the unrolled plot
     nxbins_map = {
-        'htt_et_3_13p6TeV': 8,
+        'htt_et_3_13p6TeV': 10,
         'htt_et_4_13p6TeV': 8,
-        'htt_et_5_13p6TeV': 8,
+        'htt_et_5_13p6TeV': 10,
         'htt_et_6_13p6TeV': 8,
-        'htt_mt_3_13p6TeV': 8,
+        'htt_mt_3_13p6TeV': 10,
         'htt_mt_4_13p6TeV': 8,
-        'htt_mt_5_13p6TeV': 8,
+        'htt_mt_5_13p6TeV': 10,
         'htt_mt_6_13p6TeV': 8,
         'htt_tt_3_13p6TeV': 10,
         'htt_tt_4_13p6TeV': 10,
