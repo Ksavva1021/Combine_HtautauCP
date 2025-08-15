@@ -1,8 +1,7 @@
 import ROOT
 import os
 
-datacard_name = 'mt_2022_2023.root'
-#datacard_name = 'mt_2022preEE.root'
+datacard_name = 'cpdatacards/mt_2022_2023.root'
 
 def roll_histograms(hists):
     # get total number of bins of all histograms

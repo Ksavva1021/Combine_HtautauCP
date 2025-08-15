@@ -21,6 +21,12 @@ cp_bins = {
         "tt_higgs_pipi" : 4,
         "tt_higgs_rhoa11pr" : 10,
         "tt_higgs_rhorho" : 10,
+        "tautau": 1,
+        "fake": 1,
+        "tau2a1_3pr": 10,
+        "tau2a1": 8,
+        "tau2pi": 8,
+        "tau2rho": 10
 }
 
 test_results_sym = {}
