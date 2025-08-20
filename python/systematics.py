@@ -1,7 +1,22 @@
 import CombineHarvester.CombineTools.ch as ch
+import yaml
 # Note CMS common systematics should be named following: https://gitlab.cern.ch/cms-analysis/general/systematics/-/blob/master/systematics_master.yml?ref_type=heads, analysis specific ones should eventually have the CADI number in the names
 
 def AddSMRun3Systematics(cb):
+
+    cats_tt = {
+        1:'tt_mva_tau',
+        2:'tt_mva_fake',
+        3:'tt_higgs_rhorho',
+        4:'tt_higgs_rhoa11pr',
+        5:'tt_higgs_rhoa1',
+        6:'tt_higgs_a1a1',
+        7:'tt_higgs_pirho',
+        8:'tt_higgs_pipi',
+        9:'tt_higgs_pia1',
+        10: 'tt_higgs_pia11pr',
+        11: 'tt_higgs_a11pra1',
+        }
     
     # define processes lists
     sig_procs = {}
@@ -83,8 +98,10 @@ def AddSMRun3Systematics(cb):
     # TODO: signal theory uncertainties
     
     # TODO: DY shape uncertainty (e.g from pT/mass reweighting)
-    
+    cb.cp().process(dy_procs).AddSyst(cb, "dy_pt_reweighting", "shape", ch.SystMap()(1.0))
+
     # TODO: ttbar shape uncertainty (e.g from pT reweighting)
+    cb.cp().process(ttbar_procs).AddSyst(cb, "top_pt_reweighting", "shape", ch.SystMap()(1.0))
     
     ###############################################
     # Offline object identification
@@ -135,7 +152,35 @@ def AddSMRun3Systematics(cb):
     # jet->tau fake-factors
     ###############################################
 
-    # TODO: FF uncertainties
+    # TODO: FF uncertainties - need to be added for et and mt channels as well
+
+    # tt channel statistical uncertainties
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,7,8,9,10]).AddSyst(cb, "ff_tt_stat_dm0", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,3,4,5,7]).AddSyst(cb, "ff_tt_stat_dm1", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,4,10,11]).AddSyst(cb, "ff_tt_stat_dm2", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,5,6,9,11]).AddSyst(cb, "ff_tt_stat_dm10", "shape", ch.SystMap()(1.0))
+
+    # add lnN FF uncertainty from yml file located in configs/ff_lnN_uncertainties.yml
+    # open yml file and read uncertainties
+    with open('configs/ff_lnN_uncertainties.yml', 'r') as f:
+        ff_lnN_uncertainties = yaml.safe_load(f)
+        cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, f"ff_tt_syst_lnN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt']['correlated']))
+        for i in range(1, 12):
+            # add lnN uncertainty for each decay mode
+            cb.cp().process(['JetFakes']).channel(['tt']).bin_id([i]).AddSyst(cb, f"ff_tt_syst_lnN_$BIN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt'][cats_tt[i]]))
+
+     add shape uncertainties for BDT score, this is decorrelated between tau, fake, and higgs categories
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1]).AddSyst(cb, "ff_tt_syst_BDTshape_tau", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([2]).AddSyst(cb, "ff_tt_syst_BDTshape_fake", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "ff_tt_syst_BDTshape_higgs", "shape", ch.SystMap()(1.0))
+
+    # add shape uncertainties for aco angle, this is decorrelated between categories
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "ff_tt_syst_acoshape_$BIN", "shape", ch.SystMap()(1.0))
+
+    # uncertainty due to subtracted real taus in the tt channel
+    cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "ff_tt_sub_syst", "shape", ch.SystMap()(1.0))
+    # lnN uncertainty for the JetFakesSublead as it is estimated from MC
+    cb.cp().process(['JetFakesSublead']).channel(['tt']).AddSyst(cb, "ff_tt_mc", "lnN", ch.SystMap()(1.3))
 
     ###############################################
     # 4-vectors for CP angle reconstruction

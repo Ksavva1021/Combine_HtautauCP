@@ -1,0 +1,14 @@
+tt:
+  correlated: 1.096
+  tt_higgs_pia1: 1.023
+  tt_higgs_a11pra1: 1.121
+  tt_higgs_rhoa1: 1.024
+  tt_higgs_pia11pr: 1.014
+  tt_higgs_pirho: 1.032
+  tt_mva_fake: 1.007
+  tt_mva_higgs: 1.036
+  tt_mva_tau: 1.022
+  tt_higgs_a1a1: 1.081
+  tt_higgs_pipi: 1.164
+  tt_higgs_rhoa11pr: 1.062
+  tt_higgs_rhorho: 1.040
