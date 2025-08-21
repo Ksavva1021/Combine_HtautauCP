@@ -109,7 +109,7 @@ for chn in chans:
         cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs_mt['qqH'], cats[chn], True) ###TEMP
 
 # TODO: systematics to be added here
-#cb = AddSMRun3Systematics(cb) 
+cb = AddSMRun3Systematics(cb) 
 
 if merge_mode == 2:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',

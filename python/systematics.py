@@ -124,6 +124,10 @@ def AddSMRun3Systematics(cb):
     # TODO: electron trigger
     
     # TODO: tau trigger
+    # TODO: add statistical uncertainties from fitted functions
+
+    # We also add a 3% systematic uncertainty due to the background modelling in the SF extraction based on the studies in https://indico.cern.ch/event/1263107/contributions/5306043/attachments/2606862/4503028/tautriggerSF_checks.pdf
+    cb.cp().process(bkg_mc_procs).channel(['tt']).AddSyst(cb, "CMS_trig_t_ditau_syst", "lnN", ch.SystMap()(1.03))
     
     ###############################################
     # Lepton/Tau energy scales
@@ -164,12 +168,12 @@ def AddSMRun3Systematics(cb):
     # open yml file and read uncertainties
     with open('configs/ff_lnN_uncertainties.yml', 'r') as f:
         ff_lnN_uncertainties = yaml.safe_load(f)
-        cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, f"ff_tt_syst_lnN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt']['correlated']))
+        cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "ff_tt_syst_lnN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt']['correlated']))
         for i in range(1, 12):
             # add lnN uncertainty for each decay mode
-            cb.cp().process(['JetFakes']).channel(['tt']).bin_id([i]).AddSyst(cb, f"ff_tt_syst_lnN_$BIN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt'][cats_tt[i]]))
+            cb.cp().process(['JetFakes']).channel(['tt']).bin_id([i]).AddSyst(cb, "ff_tt_syst_lnN_$BIN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt'][cats_tt[i]]))
 
-     add shape uncertainties for BDT score, this is decorrelated between tau, fake, and higgs categories
+    # add shape uncertainties for BDT score, this is decorrelated between tau, fake, and higgs categories
     cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1]).AddSyst(cb, "ff_tt_syst_BDTshape_tau", "shape", ch.SystMap()(1.0))
     cb.cp().process(['JetFakes']).channel(['tt']).bin_id([2]).AddSyst(cb, "ff_tt_syst_BDTshape_fake", "shape", ch.SystMap()(1.0))
     cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "ff_tt_syst_BDTshape_higgs", "shape", ch.SystMap()(1.0))
