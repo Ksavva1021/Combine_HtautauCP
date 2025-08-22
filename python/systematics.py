@@ -17,6 +17,8 @@ def AddSMRun3Systematics(cb):
         10: 'tt_higgs_pia11pr',
         11: 'tt_higgs_a11pra1',
         }
+
+    eras = ['2022', '2022EE', '2023', '2023BPix']
     
     # define processes lists
     sig_procs = {}
@@ -138,15 +140,25 @@ def AddSMRun3Systematics(cb):
     # TODO: muon ES ? (not included for Run-2 as it was small)
     
     # TODO: tau ES (including for l fakes)
+
+    for era in eras:
+        for dm in ['0', '1', '2', '10']:
+            cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(['ZL']).channel(['tt']).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+    #TODO: add the ones for the l->tau fakes for mt and et channels (ZL only)
+
+
     
     
     ###############################################
     # Jet/MET scale/resolutions 
     ###############################################
 
-    # TODO: JES
-    
-    # TODO: JER
+    # TODO: Might need to split by eras or even into all the sources
+
+    cb.cp().process(mc_procs).AddSyst(cb, 'CMS_scale_j_13p6TeV', 'shape', ch.SystMap()(1.0))
+
+    cb.cp().process(mc_procs).AddSyst(cb, 'CMS_res_j_13p6TeV', 'shape', ch.SystMap()(1.0))
     
     # TODO: MET uncl
     
