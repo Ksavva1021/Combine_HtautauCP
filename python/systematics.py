@@ -113,8 +113,29 @@ def AddSMRun3Systematics(cb):
     
     # TODO: electron ID
     
-    # TODO: tau ID (including for l fakes)
-    
+    # TODO: add uncerts for l->tau fakes as well
+    # TODO: add specific bins for et and mt channels as well
+
+    for era in eras:
+        # statistical uncertainties from fitted function parameters
+        for u in ['stat1','stat2']:
+            for dm in ['0', '1', '2', '10']:
+                cb.cp().process(mc_procs).process(['ZL'], False).bin_id([1,2]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+                cb.cp().process(['ZL']).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM0PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM1PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM2PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM10PNet_{era}', 'shape', ch.SystMap()(1.0))
+
+        # systematic that is correlated across decay modes but decorrelated across eras
+        cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_{era}', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(['ZL']).channel(['tt']).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_{era}', 'shape', ch.SystMap()(1.0))
+
+    # systematic that is correlated across eras and decay modes
+    cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_alleras', 'shape', ch.SystMap()(1.0))
+    cb.cp().process(['ZL']).channel(['tt']).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_alleras', 'shape', ch.SystMap()(1.0))
+
     # TODO: btag ID (including for fakes)
    
     ###############################################
@@ -138,15 +159,20 @@ def AddSMRun3Systematics(cb):
     # TODO: electron ES
     
     # TODO: muon ES ? (not included for Run-2 as it was small)
-    
-    # TODO: tau ES (including for l fakes)
 
     for era in eras:
         for dm in ['0', '1', '2', '10']:
-            cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(['ZL']).channel(['tt']).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
-    #TODO: add the ones for the l->tau fakes for mt and et channels (ZL only)
+            cb.cp().process(mc_procs).process(['ZL'], False).bin_id([1,2]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(['ZL']).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
 
+        cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM0PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM1PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM2PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM10PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+
+
+    #TODO: add for mt and et specific bins as well         
+    #TODO: add the ones for the l->tau fakes for mt and et channels (ZL only)
 
     
     

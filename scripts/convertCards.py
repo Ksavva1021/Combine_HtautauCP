@@ -319,7 +319,7 @@ output_file = ROOT.TFile(newfilename,"RECREATE")
 for key in original_file.GetListOfKeys():
     if isinstance(original_file.Get(key.GetName()),ROOT.TDirectory):
         dirname=key.GetName()
-        if dirname in cp_bins and dirname.startswith('tt_'): GetFFUncerts(dirname, original_file)
+        if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs"): GetFFUncerts(dirname, original_file)
         getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname)
 
 if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_mva_fake' in ff_aiso_yields:
