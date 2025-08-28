@@ -100,3 +100,25 @@ Make plots from this scripts setting the -b option to the name of the bin you wa
 ```
 python3 scripts/postfitPlot.py -b htt_tt_3_13p6TeV
 ```
+
+### running approximate impacts
+
+For some reason the Impacts with --approx option does not run the initial fit and just complains it doesn't exist, so we run this ourselves and rename it using: 
+
+```
+combineTool.py -m 125 -M MultiDimFit --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90  --redefineSignalPOIs alpha  -d outputs/cmb/ws.root -t -1 -n .alpha.Impacts --alignEdges 1 --saveFitResult
+
+mv multidimfit.alpha.Impacts.root multidimfit_approxFit_.alpha.Impacts.root
+```
+
+Then we make the json with the approximate impacts using:
+
+```
+combineTool.py -m 125 -M Impacts --setParameters muV=1,alpha=0,muggH=1,mutautau=1 -d outputs/cmb/ws.root -t -1 -n .alpha.Impacts  --approx=hesse --output impacts.json
+```
+
+And then plot using:
+
+```
+plotImpacts.py -i impacts.json -o impacts
+```
