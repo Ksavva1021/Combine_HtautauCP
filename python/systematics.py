@@ -22,7 +22,7 @@ def AddSMRun3Systematics(cb):
     
     # define processes lists
     sig_procs = {}
-    sig_procs['ggH'] = ['ggH_sm_htt','ggH_ps_htt','ggH_mm_htt']
+    sig_procs['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt', 'ggH_sm_prod_ps_htt','ggH_ps_prod_ps_htt','ggH_mm_prod_ps_htt', 'ggH_sm_prod_mm_htt','ggH_ps_prod_mm_htt','ggH_mm_prod_mm_htt']
     sig_procs['VBF'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt']
     sig_procs['ZH'] = ['ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
     sig_procs['WH'] = ['WH_sm_htt','WH_ps_htt','WH_mm_htt']
@@ -31,7 +31,7 @@ def AddSMRun3Systematics(cb):
     dy_procs = ['ZTT', 'ZL']
     ttbar_procs = ['TTT']
     vv_procs = ['VVT']
-    bkg_mc_procs = dy_procs + ttbar_procs + vv_procs
+    bkg_mc_procs = dy_procs + ttbar_procs + vv_procs #+ ['JetFakesSublead']
     
     mc_procs = bkg_mc_procs
     for p in sig_procs.values(): mc_procs+=p
@@ -150,7 +150,7 @@ def AddSMRun3Systematics(cb):
     # TODO: add statistical uncertainties from fitted functions
 
     # We also add a 3% systematic uncertainty due to the background modelling in the SF extraction based on the studies in https://indico.cern.ch/event/1263107/contributions/5306043/attachments/2606862/4503028/tautriggerSF_checks.pdf
-    cb.cp().process(bkg_mc_procs).channel(['tt']).AddSyst(cb, "CMS_trig_t_ditau_syst", "lnN", ch.SystMap()(1.03))
+    cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, "CMS_trig_t_ditau_syst", "lnN", ch.SystMap()(1.03))
     
     ###############################################
     # Lepton/Tau energy scales
