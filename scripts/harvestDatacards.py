@@ -14,7 +14,7 @@ with open(args.config, 'r') as file:
    setup = yaml.safe_load(file)
 
 chans = setup['channels']
-if chans == 'all': chans = ['tt','mt'] # only using tt channel for now but can add mt and et later
+if chans == 'all': chans = ['tt','mt','et'] # only using tt channel for now but can add mt and et later
 else: chans = chans.split(',')
 
 
@@ -138,8 +138,7 @@ for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     elif chn == 'tt': filename = '%s/added_histo_Run2Bins-mergeXbins.root' % (input_folder)
     #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
-    elif chn == 'mt': filename = '%s/mt_Run3_merged-mergeXbins.root' % (input_folder)
-    elif chn == 'et': filename = '%s/et_Run3_merged-mergeXbins.root' % (input_folder)
+    else: filename = '%s/%s_Run3_merged-mergeXbins.root' % (input_folder, chn)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
@@ -362,10 +361,16 @@ writer.WriteCards("a11pra1",  cb.cp().channel({"tt"}).bin_id({1,2,11}))
 writer.WriteCards("murho",  cb.cp().channel({"mt"}).bin_id({1,2,3}))
 writer.WriteCards("mupi", cb.cp().channel({"mt"}).bin_id({1,2,4}))
 writer.WriteCards("mua1", cb.cp().channel({"mt"}).bin_id({1,2,5}))
-writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6})) 
+writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6}))
+writer.WriteCards("erho",  cb.cp().channel({"et"}).bin_id({1,2,3}))
+writer.WriteCards("epi", cb.cp().channel({"et"}).bin_id({1,2,4}))
+writer.WriteCards("ea1", cb.cp().channel({"et"}).bin_id({1,2,5}))
+writer.WriteCards("ea11pr", cb.cp().channel({"et"}).bin_id({1,2,6}))
 
-writer.WriteCards("mt", cb.cp().channel({"mt"}))
+# Cards per channel 
 writer.WriteCards("tt", cb.cp().channel({"tt"}))
+writer.WriteCards("mt", cb.cp().channel({"mt"}))
+writer.WriteCards("et", cb.cp().channel({"et"}))
 
 
 
