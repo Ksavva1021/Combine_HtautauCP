@@ -37,10 +37,9 @@ ulimit -c 0
 The current mt datacard format requires the BDT bin categories to be combined into one histogram, this is done by the following script:
 
 ```
-python3 scripts/process_mt_cards.py
+python3 scripts/process_mt_cards.py -f cpdatacards/mt_2022_2023.root
 ```
 
-Note the datacard directory and name needs to be changed in the script
 
 Then apply flattening/symmetrisation to datacards for both mt and tt channels using: 
 
