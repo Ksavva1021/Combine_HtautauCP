@@ -1,7 +1,13 @@
 import ROOT
 import os
+import argparse
 
-datacard_name = 'cpdatacards/mt_2022_2023.root'
+parser = argparse.ArgumentParser()
+parser.add_argument('--file', '-f', help= 'File from which we want to merge bins')
+args = parser.parse_args()
+
+#datacard_name = 'cpdatacards/mt_2022_2023.root'
+datacard_name = args.file
 
 def roll_histograms(hists):
     # get total number of bins of all histograms
@@ -54,7 +60,6 @@ def merge_seperate_cats(input_file, output_file):
                         combined_dirs_histograms[dir_name_nocat][hist_name] = []
                     hist_clone = hist.Clone()
                     hist_clone.SetDirectory(0)
-                    print(hist_name, cat_name)
                     hist_clone.SetName(f'{hist_name}{cat_name}')
                     combined_dirs_histograms[dir_name_nocat][hist_name].append(hist_clone)
 
@@ -66,7 +71,6 @@ def merge_seperate_cats(input_file, output_file):
         for hist_name, hists in histograms.items():
             if len(hists) > 1:
                 # sort histograms based on _catX at the end of their names
-                print(hists[0].GetName())
                 hists.sort(key=lambda x: int(x.GetName().split('_')[-1].replace('cat', '')))
                 rolled_hist = roll_histograms(hists)
                 rolled_hist.Write(hist_name)

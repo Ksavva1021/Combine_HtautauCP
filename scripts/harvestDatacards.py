@@ -14,7 +14,7 @@ with open(args.config, 'r') as file:
    setup = yaml.safe_load(file)
 
 chans = setup['channels']
-if chans == 'all': chans = ['tt','mt'] # only using tt channel for now but can add mt and et later
+if chans == 'all': chans = ['tt','mt','et'] # only using tt channel for now but can add mt and et later
 else: chans = chans.split(',')
 
 
@@ -27,7 +27,7 @@ merge_mode = setup['merge_mode'] # use this option to specify if we want to flat
 Run2 = False
 if Run2:
     # define background processes
-    bkg_procs = ['ZTT','ZL','TTT','VVT','jetFakes']
+    bkg_procs_tt = ['ZTT','ZL','TTT','VVT','jetFakes']
     
     # define signal processes, which are the same for every channel
     sig_procs = {}
@@ -53,19 +53,14 @@ if Run2:
 
 else: 
     # define background processes
-    bkg_procs = ['ZTT','ZL','TTT','VVT','JetFakes','JetFakesSublead']
+    bkg_procs_tt = ['ZTT','ZL','TTT','VVT','JetFakes','JetFakesSublead']
+    bkg_procs_lt = ['ZTT','ZL','TTT','VVT','JetFakes']
     fake_procs = ['JetFakes','JetFakesSublead']
-
-    bkg_procs_mt = ['ZTT','ZL','TTT','VVT','JetFakes'] ###TEMP
 
     # define signal processes, which are the same for every channel
     sig_procs = {}
     sig_procs['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt']
     sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_htt','WH_mm_htt','ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
-
-    sig_procs_mt = {} ###TEMP
-    sig_procs_mt['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt'] ###TEMP
-    sig_procs_mt['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt'] ###TEMP
 
     # define categories which can depend on the channel
     cats = {}
@@ -92,6 +87,15 @@ else:
             (6, 'mt_mva_higgs_mua11pr'),
             ]
 
+    cats['et'] = [
+            (1, 'et_mva_tau'),
+            (2, 'et_mva_fake'),
+            (3, 'et_mva_higgs_erho'),
+            (4, 'et_mva_higgs_epi'),
+            (5, 'et_mva_higgs_ea1'),
+            (6, 'et_mva_higgs_ea11pr'),
+            ]
+
 # Create an empty CombineHarvester instance
 cb = ch.CombineHarvester()
 
@@ -99,29 +103,30 @@ cb = ch.CombineHarvester()
 for chn in chans:
     # Adding Data,Signal Processes and Background processes to the harvester instance
     cb.AddObservations(['*'], ['htt'], ['13p6TeV'], [chn], cats[chn])
-    if chn == 'tt': ###TEMP
-        cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs, cats[chn], False)
-        cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['ggH'], cats[chn], True)
-        cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
-    elif chn == 'mt': ###TEMP
-        cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs_mt, cats[chn], False) ###TEMP
-        cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs_mt['ggH'], cats[chn], True) ###TEMP
-        cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs_mt['qqH'], cats[chn], True) ###TEMP
+    if chn == 'tt':
+        cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs_tt, cats[chn], False)
+    else:
+        cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs_lt, cats[chn], False)
+    cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['ggH'], cats[chn], True)
+    cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
 
 # TODO: systematics to be added here
 cb = AddSMRun3Systematics(cb) 
 
 if merge_mode == 2:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',
-                 'tau2rho', 'tau2a1_3pr'
+                 'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr',
+                 'et_mva_higgs_erho', 'et_mva_higgs_ea11pr'
     ]
     sym_cats = ['tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                'tau2pi', 'tau2a1'
+                'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
+                'et_mva_higgs_epi', 'et_mva_higgs_ea1'
     ]
 elif merge_mode == 1: 
     flat_cats = []
     sym_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1', 'tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                'tau2rho', 'tau2a1_3pr', 'tau2pi', 'tau2a1'
+                'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr', 'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
+                'et_mva_higgs_erho', 'et_mva_higgs_ea11pr', 'et_mva_higgs_epi', 'et_mva_higgs_ea1'
     ]
 else:
     flat_cats = []
@@ -132,33 +137,28 @@ else:
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     elif chn == 'tt': filename = '%s/added_histo_Run2Bins-mergeXbins.root' % (input_folder)
-    elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
+    #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
+    else: filename = '%s/%s_Run3_merged-mergeXbins.root' % (input_folder, chn)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
         cb.cp().channel([chn]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
         for sig_proc in sig_procs.values(): 
-            if chn == 'tt': ###TEMP
-                cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
-            elif chn == 'mt': ###TEMP
-                cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC") ###TEMP
+            cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
     else:
         for cat in cats[chn]:
-            if chn == 'tt': ###TEMP
-                if cat[1] in flat_cats:
-                    cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
-                    # jetFakes and signal are symmetrised rather than flattened
-                    cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
-                    for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
-                elif cat[1] in sym_cats:
-                    cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
-                    for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
-                else:
-                    cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
-                    for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
-            elif chn == 'mt': ###TEMP
-                cb.cp().channel([chn]).era(['13p6TeV']).backgrounds().ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") ###TEMP
-                for sig_proc in sig_procs_mt.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC") ###TEMP
+            if cat[1] in flat_cats:
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
+                # JetFakes and signal are symmetrised rather than flattened
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
+                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
+            elif cat[1] in sym_cats:
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
+                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
+            else:
+                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
+
 ch.SetStandardBinNames(cb)
 
 def MatchingProcess(first, second):
@@ -222,10 +222,10 @@ else:
     # Note that the merging is now only performed for the templates that have a flat distribution
 
     tt_nxbins = [1, 1, 10, 10, 10, 4, 10, 4, 4, 4, 4]
-    mt_nxbins = [1, 1, 10, 8, 10, 8]
+    lt_nxbins = [1, 1, 10, 8, 10, 8]
 
     for chan in chans:
-        bins = tt_nxbins if chan == "tt" else mt_nxbins
+        bins = tt_nxbins if chan == "tt" else lt_nxbins
         for i, nxbins in enumerate(bins):
             if nxbins <= 1:
                 continue
@@ -279,7 +279,7 @@ else:
 
     for chan in chans:
         # Now we want to merge the processes that aren't flat but that are symmetric about phiCP=pi
-        bins = tt_nxbins if chan == "tt" else mt_nxbins
+        bins = tt_nxbins if chan == "tt" else lt_nxbins
         for i, nxbins in enumerate(bins):
             if nxbins <= 1:
                 continue
@@ -362,10 +362,16 @@ writer.WriteCards("a11pra1",  cb.cp().channel({"tt"}).bin_id({1,2,11}))
 writer.WriteCards("murho",  cb.cp().channel({"mt"}).bin_id({1,2,3}))
 writer.WriteCards("mupi", cb.cp().channel({"mt"}).bin_id({1,2,4}))
 writer.WriteCards("mua1", cb.cp().channel({"mt"}).bin_id({1,2,5}))
-writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6})) 
+writer.WriteCards("mua11pr", cb.cp().channel({"mt"}).bin_id({1,2,6}))
+writer.WriteCards("erho",  cb.cp().channel({"et"}).bin_id({1,2,3}))
+writer.WriteCards("epi", cb.cp().channel({"et"}).bin_id({1,2,4}))
+writer.WriteCards("ea1", cb.cp().channel({"et"}).bin_id({1,2,5}))
+writer.WriteCards("ea11pr", cb.cp().channel({"et"}).bin_id({1,2,6}))
 
-writer.WriteCards("mt", cb.cp().channel({"mt"}))
+# Cards per channel 
 writer.WriteCards("tt", cb.cp().channel({"tt"}))
+writer.WriteCards("mt", cb.cp().channel({"mt"}))
+writer.WriteCards("et", cb.cp().channel({"et"}))
 
 
 
