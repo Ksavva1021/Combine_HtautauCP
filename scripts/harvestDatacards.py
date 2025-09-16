@@ -136,7 +136,7 @@ else:
 
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    elif chn == 'tt': filename = '%s/added_histo_noBPix-mergeXbins.root' % (input_folder)
+    elif chn == 'tt': filename = '%s/added_histo-mergeXbins.root' % (input_folder)
     #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
     else: filename = '%s/%s_Run3_merged-mergeXbins.root' % (input_folder, chn)
     print (">>>   file %s" % (filename))
@@ -379,6 +379,9 @@ writer.SetVerbosity(1)
 writer.SetWildcardMasses([ ])
 writer.WriteCards("cmb", cb)
 # Cards per category
+writer.WriteCards("tt_mva_tau",   cb.cp().channel({"tt"}).bin_id({1}))
+writer.WriteCards("tt_mva_fake",   cb.cp().channel({"tt"}).bin_id({2}))
+writer.WriteCards("tt_bkg",   cb.cp().channel({"tt"}).bin_id({1,2}))
 writer.WriteCards("rhorho",   cb.cp().channel({"tt"}).bin_id({1,2,3}))
 writer.WriteCards("rhoa11pr", cb.cp().channel({"tt"}).bin_id({1,2,4}))
 writer.WriteCards("rhoa1",    cb.cp().channel({"tt"}).bin_id({1,2,5}))
