@@ -136,7 +136,7 @@ else:
 
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    elif chn == 'tt': filename = '%s/added_histo_Run2Bins-mergeXbins.root' % (input_folder)
+    elif chn == 'tt': filename = '%s/added_histo_noBPix-mergeXbins.root' % (input_folder)
     #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
     else: filename = '%s/%s_Run3_merged-mergeXbins.root' % (input_folder, chn)
     print (">>>   file %s" % (filename))
@@ -151,13 +151,42 @@ for chn in chans:
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
                 # JetFakes and signal are symmetrised rather than flattened
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
-                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
+                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
+
             elif cat[1] in sym_cats:
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
-                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
+                for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
             else:
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
+
+# for QCD scale uncertainties we need to scale the yields to factor out any differences in XS
+#TODO: will need updating onces datacards templates are renamed
+for proc in ['ggH','qqH']:
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__Scale_muR",f"Theory_{proc}_Scale_muR")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__Scale_muF",f"Theory_{proc}_Scale_muF")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__PS_ISR",f"Theory_{proc}_Scale_PS_ISR")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__PS_FSR",f"Theory_{proc}_Scale_PS_FSR")
+
+cb.cp().syst_name(["Theory_ggH_Scale_muR"]).ForEachSyst(lambda syst: (
+      syst.set_value_u(syst.value_u() * 1/0.7605580771666764),
+      syst.set_value_d(syst.value_d() * 1/1.2696408372342587)
+))
+
+cb.cp().syst_name(["Theory_ggH_Scale_muF"]).ForEachSyst(lambda syst: (
+      syst.set_value_u(syst.value_u() * 1/1.0605734162962437),
+      syst.set_value_d(syst.value_d() * 1/0.9197774810421466)
+))
+
+cb.cp().syst_name(["Theory_qqH_Scale_muR"]).ForEachSyst(lambda syst: (
+      syst.set_value_u(syst.value_u() * 1/1.0025941737902164),
+      syst.set_value_d(syst.value_d() * 1/0.9967738173425197)
+))
+
+cb.cp().syst_name(["Theory_qqH_Scale_muF"]).ForEachSyst(lambda syst: (
+      syst.set_value_u(syst.value_u() * 1/1.0057565776872635),
+      syst.set_value_d(syst.value_d() * 1/0.9991435604512692)
+))
 
 ch.SetStandardBinNames(cb)
 
