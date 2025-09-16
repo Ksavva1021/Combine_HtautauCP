@@ -39,6 +39,9 @@ test_results_sym = {}
 test_results_flat = {}
 test_results_asym = {}
 
+ff_aiso_yields = {}
+extra_hists = {}
+
 def MergeXBins(hist, nxbins):
   histnew = hist.Clone()
   nbins = hist.GetNbinsX()
@@ -63,6 +66,29 @@ def MergeXBins(hist, nxbins):
   p_val_total = ROOT.TMath.Prob(chi2_total, ndf_total)
 
   return histnew, p_val_total, p_val_perbin
+
+def MergeYBins(hist, nxbins):
+  histnew = hist.Clone()
+  nbins = hist.GetNbinsX()
+
+  nybins = int(nbins/nxbins)
+
+  for i in range(1,nxbins+1):
+    tot = 0.
+    tot_err = 0.
+    for j in range(1,nybins+1):
+      bin_num = i+(j-1)*nxbins
+      tot += hist.GetBinContent(bin_num)
+      tot_err += hist.GetBinError(bin_num)**2
+    tot_err = math.sqrt(tot_err)
+    # now set all j bins to this value
+    for j in range(1,nybins+1):
+      bin_num = i+(j-1)*nxbins
+      histnew.SetBinContent(bin_num, tot)
+      histnew.SetBinError(bin_num, tot_err)
+
+  return histnew
+
 
 def Symmetrise(hist,nxbins):
   histnew=hist.Clone()
@@ -148,52 +174,141 @@ def ASymmetrise(hist,hsm,hps,nxbins):
 
   return histnew
 
+def GetDataAndEstFakes(dirname, infile):
+    directory = infile.Get(dirname)
+    # check if directory exists
+    if not directory:
+        print('Directory', dirname, 'not found in file', infile.GetName())
+        return None, None
+    data = directory.Get('data_obs')
+    backgrounds = ['ZTT','ZL','TTT','VVT','JetFakesSublead']
+    bkg = directory.Get(backgrounds[0])
+    for b in backgrounds[1:]:
+        bkg.Add(directory.Get(b))
+    data.Add(bkg,-1)
+    fake_est = directory.Get('JetFakes')
+    if not data or not fake_est:
+        print('Data or fake estimate not found in directory', dirname)
+        return
+    print(data, fake_est)
+    return data, fake_est
+
+def GetFFUncerts(dirname, infile):
+    print('Getting FF uncertainties for:', dirname)
+    dirname_aiso = dirname+'_aiso'
+
+    extra_hists[dirname] = []
+
+    data, fake_est = GetDataAndEstFakes(dirname_aiso, infile)
+
+    ff_aiso_yields[dirname] = (data.Integral(), fake_est.Integral())
+
+    if not data or not fake_est:
+        return
+
+    # now we estimate shape uncertainties for the BDT score and the aco-angle
+    nxbins = cp_bins[dirname] if dirname in cp_bins else 1
+
+    directory = infile.Get(dirname)
+    fake_est_iso = directory.Get('JetFakes')
+    rate = fake_est_iso.Integral()
+
+    name_extra=""
+    if 'higgs' in dirname:
+        name_extra = '_higgs'
+    elif 'tau' in dirname:
+        name_extra = '_tau'
+    elif 'fake' in dirname:
+        name_extra = '_fake'
+
+    for x in ['BDT', 'aco']:
+
+        if x == 'BDT':
+            # for the BDT shape uncertainties we rebin by nxbins so that the uncertainty does only depends on the BDT score and not the aco angle
+            data_merged, _, _ = MergeXBins(data, nxbins)
+            fake_est_merged, _, _ = MergeXBins(fake_est, nxbins)
+            name_extra=""
+            if 'higgs' in dirname:
+                name_extra = '_higgs'
+            elif 'tau' in dirname:
+                name_extra = '_tau'
+            elif 'fake' in dirname:
+                name_extra = '_fake'
+        elif x == 'aco':
+            # for the aco angle shape uncertainties we rebin by nybins so that the uncertainty does only depends on the aco angle and not the BDT score
+            data_merged = MergeYBins(data, nxbins)
+            fake_est_merged = MergeYBins(fake_est, nxbins)
+            name_extra = '_'+dirname
+            
+        uncert_up = fake_est_iso.Clone()
+        if uncert_up.GetNbinsX() != data_merged.GetNbinsX():
+            print('Number of bins in fake estimate and fake estimate iso do not match, cannot calculate uncertainties!')
+            return
+
+        uncert_up.Multiply(data_merged)
+        uncert_up.Divide(fake_est_merged)
+        uncert_up.Scale(rate/uncert_up.Integral())
+        uncert_down = fake_est_iso.Clone()
+        uncert_down.Multiply(fake_est_merged)
+        uncert_down.Divide(data_merged)
+        uncert_down.Scale(rate/uncert_down.Integral())
+
+        uncert_up.SetName(f'JetFakes_ff_tt_syst_{x}shape{name_extra}Up')
+        uncert_down.SetName(f'JetFakes_ff_tt_syst_{x}shape{name_extra}Down')
+    
+        extra_hists[dirname] += [uncert_up, uncert_down]
+
 def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
     directory = infile.Get(dirname)
+
+    histos = []
     for key in directory.GetListOfKeys():
         histo = directory.Get(key.GetName())
-        if isinstance(histo,ROOT.TH1D) or isinstance(histo,ROOT.TH1F):
-            print('Processing:', dirname, histo.GetName()) 
-            if dirname in cp_bins: nxbins = cp_bins[dirname]
-            else: nxbins=1
+        if isinstance(histo, ROOT.TH1D) or isinstance(histo, ROOT.TH1F):
+            histos.append(histo)
+    # add extra_hists to histos
+    if dirname in extra_hists:
+        for histo in extra_hists[dirname]:
+            if isinstance(histo, ROOT.TH1D) or isinstance(histo, ROOT.TH1F):
+                histos.append(histo)
 
-            # we write all the old histograms to the output file
-            outfile.cd()
-            if not ROOT.gDirectory.GetDirectory(dirname): ROOT.gDirectory.mkdir(dirname)
-            ROOT.gDirectory.cd(dirname)
-            histo.Write()
 
-            if nxbins== 1: continue
-
-            # if data we skip
-            if 'data_obs' in key.GetName(): continue
-
-            # if mm signal then we only anti-symmetrise
-            elif 'H_mm' in key.GetName() and 'htt125' in key.GetName() and nxbins>1:
-                hsm = directory.Get(key.GetName().replace('H_mm_','H_sm_'))
-                hps = directory.Get(key.GetName().replace('H_mm_','H_ps_'))
-                histo_asym = ASymmetrise(histo,hsm,hps,nxbins)
-                histo_asym.SetName(histo.GetName()+'_sym')
-                histo_asym.Write()
-                continue 
-
-            # if not mm signal then we always symmetrise
-            else:
-                histo_sym, p_val_total, p_val_perbin = Symmetrise(histo,nxbins)
-                if dirname not in test_results_sym:
-                    test_results_sym[dirname] = {}
-                test_results_sym[dirname][histo.GetName()] = (p_val_total, p_val_perbin[-1])
-                histo_sym.SetName(histo.GetName()+'_sym')
-                histo_sym.Write()
-
-                # if not signal then we also flatten
-                if 'htt125' not in key.GetName() or 'Higgs_flat' in key.GetName() or 'H_flat' in key.GetName():
-                    histo_flat, p_val_total, p_val_perbin = MergeXBins(histo,nxbins)
-                    if dirname not in test_results_flat:
-                        test_results_flat[dirname] = {}
-                    test_results_flat[dirname][histo.GetName()] = (p_val_total, p_val_perbin[-1])
-                    histo_flat.SetName(histo.GetName()+'_flat')
-                    histo_flat.Write()
+    for histo in histos:
+        #print('Processing:', dirname, histo.GetName()) 
+        if dirname in cp_bins: nxbins = cp_bins[dirname]
+        else: nxbins = 1  
+        # we write all the old histograms to the output file
+        outfile.cd()
+        if not ROOT.gDirectory.GetDirectory(dirname): ROOT.gDirectory.mkdir(dirname)
+        ROOT.gDirectory.cd(dirname)
+        histo.Write()    
+        if nxbins== 1: continue    
+        # if data we skip
+        if 'data_obs' in histo.GetName(): continue    
+        # if mm signal then we only anti-symmetrise
+        elif 'H_mm' in histo.GetName() and 'htt125' in histo.GetName() and nxbins>1:
+            hsm = directory.Get(histo.GetName().replace('H_mm_','H_sm_'))
+            hps = directory.Get(histo.GetName().replace('H_mm_','H_ps_'))
+            histo_asym = ASymmetrise(histo,hsm,hps,nxbins)
+            histo_asym.SetName(histo.GetName()+'_sym')
+            histo_asym.Write()
+            continue    
+        # if not mm signal then we always symmetrise
+        else:
+            histo_sym, p_val_total, p_val_perbin = Symmetrise(histo,nxbins)
+            if dirname not in test_results_sym:
+                test_results_sym[dirname] = {}
+            test_results_sym[dirname][histo.GetName()] = (p_val_total, p_val_perbin[-1])
+            histo_sym.SetName(histo.GetName()+'_sym')
+            histo_sym.Write()    
+            # if not signal then we also flatten
+            if 'htt125' not in histo.GetName() or 'Higgs_flat' in histo.GetName() or 'H_flat' in histo.GetName():
+                histo_flat, p_val_total, p_val_perbin = MergeXBins(histo,nxbins)
+                if dirname not in test_results_flat:
+                    test_results_flat[dirname] = {}
+                test_results_flat[dirname][histo.GetName()] = (p_val_total, p_val_perbin[-1])
+                histo_flat.SetName(histo.GetName()+'_flat')
+                histo_flat.Write()
 
         ROOT.gDirectory.cd('/')
 
@@ -210,7 +325,39 @@ output_file = ROOT.TFile(newfilename,"RECREATE")
 for key in original_file.GetListOfKeys():
     if isinstance(original_file.Get(key.GetName()),ROOT.TDirectory):
         dirname=key.GetName()
+        if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs"): GetFFUncerts(dirname, original_file)
         getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname)
+
+if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_mva_fake' in ff_aiso_yields:
+
+
+
+    # now we estimate the normalization uncertainties for the FFs
+    # get the correlated uncertainty from summing mva_higgs, mva_tau, and mva_fake
+    data_total = 0.
+    fake_total = 0.
+    for x in ['tt_mva_higgs', 'tt_mva_tau', 'tt_mva_fake']:
+        if x in ff_aiso_yields:
+            data_total += ff_aiso_yields[x][0]
+            fake_total += ff_aiso_yields[x][1]
+    uncert_corr = data_total/fake_total
+
+    # create a yml file to store the lnN uncertainties for the FFs
+    with open('configs/ff_lnN_uncertainties.yml', 'w') as f:
+
+        f.write('tt:')
+        f.write(f'\n  correlated: {abs(1-uncert_corr)+1:.3f}\n')
+    
+
+        # now loop over 'tt' categories and get uncertainty per bin
+        # in this case we scale the by the uncert_corr so that we don't double count the correlated uncertainty
+        for dirname in ff_aiso_yields:
+            if dirname.startswith('tt_'):
+                data, fake_est = ff_aiso_yields[dirname]
+                uncert = data / fake_est / (uncert_corr)
+                uncert = abs(uncert - 1)+1
+                f.write(f'  {dirname}: {uncert:.3f}\n')
+
 
 if args.test:
 

@@ -111,7 +111,7 @@ for chn in chans:
     cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
 
 # TODO: systematics to be added here
-cb = AddSMRun3Systematics(cb)
+cb = AddSMRun3Systematics(cb) 
 
 if merge_mode == 2:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',
@@ -158,6 +158,7 @@ for chn in chans:
             else:
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
+
 ch.SetStandardBinNames(cb)
 
 def MatchingProcess(first, second):
