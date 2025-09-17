@@ -168,22 +168,22 @@ for proc in ['ggH','qqH']:
     cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_isr_signal",f"ps_isr_{proc}")
     cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_fsr_signal",f"ps_fsr_{proc}")
 
-cb.cp().syst_name(["Theory_ggH_Scale_muR"]).ForEachSyst(lambda syst: (
+cb.cp().syst_name(["QCDscale_ren_ggH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/0.7605580771666764),
       syst.set_value_d(syst.value_d() * 1/1.2696408372342587)
 ))
 
-cb.cp().syst_name(["Theory_ggH_Scale_muF"]).ForEachSyst(lambda syst: (
+cb.cp().syst_name(["QCDscale_fac_ggH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/1.0605734162962437),
       syst.set_value_d(syst.value_d() * 1/0.9197774810421466)
 ))
 
-cb.cp().syst_name(["Theory_qqH_Scale_muR"]).ForEachSyst(lambda syst: (
+cb.cp().syst_name(["QCDscale_ren_qqH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/1.0025941737902164),
       syst.set_value_d(syst.value_d() * 1/0.9967738173425197)
 ))
 
-cb.cp().syst_name(["Theory_qqH_Scale_muF"]).ForEachSyst(lambda syst: (
+cb.cp().syst_name(["QCDscale_fac_qqH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/1.0057565776872635),
       syst.set_value_d(syst.value_d() * 1/0.9991435604512692)
 ))

@@ -256,17 +256,14 @@ def AddSMRun3Systematics(cb):
     ###############################################
     
     # IP direction/scale
-    # TODO uncomment once added with correct name
-    #cb.cp().process(mc_procs).channel(['tt']).bin_ids([7,8,9,10]).AddSyst(cb, "IP_syst", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, "CMS_res_IP", "shape", ch.SystMap()(1.0))
     
     # TODO: pi0 direction/scale (not included for Run-2 but could add)
     
     # TODO: pi direction/scale (not included for Run-2 but could add)
     
     # SV vertex resolution uncertainty
-    #TODO: using sensible placeholder value for now but could be updated with a better number
-    # TODO uncomment once added with correct name
-    #cb.cp().process(mc_procs).channel(['tt']).bin_ids([5,6,9,11]).AddSyst(cb, "SV_syst", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, "CMS_res_SV", "shape", ch.SystMap()(1.0))
 
 
     ###############################################
