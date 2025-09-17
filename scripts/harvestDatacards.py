@@ -163,10 +163,10 @@ for chn in chans:
 # for QCD scale uncertainties we need to scale the yields to factor out any differences in XS
 #TODO: will need updating onces datacards templates are renamed
 for proc in ['ggH','qqH']:
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__Scale_muR",f"Theory_{proc}_Scale_muR")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__Scale_muF",f"Theory_{proc}_Scale_muF")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__PS_ISR",f"Theory_{proc}_Scale_PS_ISR")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"Theory__PS_FSR",f"Theory_{proc}_Scale_PS_FSR")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_ren_signal_ACCEPT",f"QCDscale_ren_{proc}_ACCEPT")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_fac_signal_ACCEPT",f"QCDscale_fac_{proc}_ACCEPT")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_isr_signal",f"ps_isr_{proc}")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_fsr_signal",f"ps_fsr_{proc}")
 
 cb.cp().syst_name(["Theory_ggH_Scale_muR"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/0.7605580771666764),

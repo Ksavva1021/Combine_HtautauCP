@@ -104,12 +104,12 @@ def AddSMRun3Systematics(cb):
     #TODO: remove double _
 
     # QCD scale variations
-    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "Theory__Scale_muR", "shape", ch.SystMap()(1.0))
-    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "Theory__Scale_muF", "shape", ch.SystMap()(1.0))
+    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "QCDscale_ren_signal_ACCEPT", "shape", ch.SystMap()(1.0))
+    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "QCDscale_fac_signal_ACCEPT", "shape", ch.SystMap()(1.0))
 
     # parton shower variations
-    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "Theory__PS_ISR", "shape", ch.SystMap()(1.0))
-    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "Theory__PS_FSR", "shape", ch.SystMap()(1.0))
+    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "ps_isr_signal", "shape", ch.SystMap()(1.0))
+    cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "ps_fsr_signal", "shape", ch.SystMap()(1.0))
 
     # DY shape uncertainty (e.g from pT/mass reweighting)
     cb.cp().process(dy_procs).AddSyst(cb, "dy_pt_reweighting", "shape", ch.SystMap()(1.0))
@@ -162,17 +162,16 @@ def AddSMRun3Systematics(cb):
     # statistical uncertainties
     for era in eras:
         # tau leg uncertainties
-        for trig in ['doubletau','doubletaujet']:
+        for trig in ['ditau','ditaujet']:
             for dm in ['0', '1', '2', '10']:
-                if trig == 'doubletaujet' and dm == '10': continue
-                cb.cp().process(mc_procs).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_eff_trg_{trig}_tau_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_eff_trg_{trig}_tau_DM0PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_eff_trg_{trig}_tau_DM1PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_eff_trg_{trig}_tau_DM2PNet_{era}', 'shape', ch.SystMap()(1.0))
-            if not trig == 'doubletaujet': cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_eff_trg_{trig}_tau_DM10PNet_{era}', 'shape', ch.SystMap()(1.0))
+                cb.cp().process(mc_procs).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
 
         # jet leg uncertainties
-        cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, f'CMS_eff_trg_doubletaujet_jet_{era}', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, f'CMS_trig_j_ditaujet_{era}', 'shape', ch.SystMap()(1.0))
 
     # We also add a 3% systematic uncertainty due to the background modelling in the SF extraction based on the studies in https://indico.cern.ch/event/1263107/contributions/5306043/attachments/2606862/4503028/tautriggerSF_checks.pdf
     cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, "CMS_trig_t_ditau_syst", "lnN", ch.SystMap()(1.03))
@@ -215,8 +214,8 @@ def AddSMRun3Systematics(cb):
     # MET recoil uncertainties
     #TODO: remove the _
 
-    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_scale_met_', 'shape', ch.SystMap()(1.0))
-    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_res_met_', 'shape', ch.SystMap()(1.0))
+    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_scale_met', 'shape', ch.SystMap()(1.0))
+    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_res_met', 'shape', ch.SystMap()(1.0))
     
     ###############################################
     # jet->tau fake-factors
