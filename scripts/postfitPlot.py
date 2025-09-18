@@ -184,7 +184,7 @@ if __name__ == "__main__":
     autoblind = args.autoblind
     norm_bins = args.norm_bins
     
-    ratio_range = '0.5,1.5'
+    ratio_range = '0.0,2.0'
     signal_scale = 1.0
     
     if norm_bins:
@@ -380,6 +380,7 @@ if __name__ == "__main__":
     line.SetLineColor(ROOT.kBlack)
     line.Draw("same")
 
+    # note bkgonlyhist has issues with uncertainties right now (large as uncertainty on signal is large)
     
     ratio_bkghist = plot.MakeRatioHist(bkghist,bkghist,True,False)
     ratio_bkghist.Draw("e2same")
@@ -393,7 +394,7 @@ if __name__ == "__main__":
     #sbhist.SetLineColor(ROOT.kRed)
     #sbhist.SetLineWidth(2)
     #sbhist.SetFillStyle(0)
-    #ratio_sighist = plot.MakeRatioHist(sbhist,bkghist,True,False)
+    #ratio_sighist = plot.MakeRatioHist(sbhist,bkgonlyhist,True,False)
     #ratio_sighist.Draw("histsame")
     pads[1].RedrawAxis()
 
@@ -420,7 +421,9 @@ if __name__ == "__main__":
 
         # add extra axis for the phiCP angle
         scale = abs(float(ratio_range.split(',')[0])-float(ratio_range.split(',')[1]))/2
-        y_axis = 0.3 * scale
+
+        y_axis = float(ratio_range.split(',')[0]) - 0.7*scale
+
         extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,400,"NS")
         extra_axis.SetLabelSize(0)
         #extra_axis.SetLabelFont(42)
