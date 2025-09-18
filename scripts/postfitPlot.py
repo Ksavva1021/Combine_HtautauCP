@@ -2,6 +2,8 @@ import CombineHarvester.CombineTools.plotting as plot
 import ROOT
 import argparse
 import math
+import ctypes
+from scipy.stats import chi2
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 ROOT.TH1.AddDirectory(False)
@@ -97,6 +99,39 @@ def DrawTitleUnrolled(pad, text, align, scale=1):
         latex.DrawLatex(1 - r, y_off, text)
     pad_backup.cd()
 
+def garwood_interval(n, cl=0.683):
+    """
+    Compute Garwood interval (exact Poisson confidence interval).
+    Returns (low, high) for observed count n.
+    """
+    alpha = 1 - cl
+    if n == 0:
+        low = 0.0
+    else:
+        low = 0.5 * chi2.ppf(alpha / 2, 2 * n)
+    high = 0.5 * chi2.ppf(1 - alpha / 2, 2 * (n + 1))
+    return low, high
+
+def MakeRatioGraph(num,denom):
+    # make a ratio graph from a TGraphAsymmErrors and a TH1
+    ratio = num.Clone()
+    for i in range(0, ratio.GetN()):
+        x = ctypes.c_double(0.)
+        y = ctypes.c_double(0.)
+        ratio.GetPoint(i, x, y)
+        x = x.value
+        y = y.value
+        bin = denom.FindBin(x)
+        denom_y = denom.GetBinContent(bin)
+        if denom_y != 0:
+            ratio.SetPoint(i, x, y/denom_y)
+            # keep the relative errors the same
+            ratio.SetPointError(i, ratio.GetErrorXlow(i), ratio.GetErrorXhigh(i), ratio.GetErrorYlow(i)/y*ratio.GetY()[i], ratio.GetErrorYhigh(i)/y*ratio.GetY()[i])
+        else:
+            ratio.SetPoint(i, x, 0)
+            ratio.SetPointError(i, 0., 0., 0., 0.)
+    return ratio
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Post-fit plot script for Htautau CP analysis')
@@ -191,7 +226,7 @@ if __name__ == "__main__":
     datahist = getHistogram(input_file,"data_obs",bin_name)[0]
     datahist.SetMarkerStyle(20)
     
-    if autoblind:
+    if autoblind>0:
         # get rid of any data bins when the ave_sig/bkghist fraction is > autoblind by settinfg the yield to -0.1 and the error to 0
         for i in range(1, datahist.GetNbinsX()+1):
             if bkghist.GetBinContent(i) == 0: blind = True
@@ -200,6 +235,27 @@ if __name__ == "__main__":
             if blind:
                 datahist.SetBinContent(i, -0.1)
                 datahist.SetBinError(i, 0)
+
+
+    #convert datahist into datagraph using TGraphAsymmErrors for proper Poissonian error bars
+    datagraph = ROOT.TGraphAsymmErrors(datahist)
+    datagraph.SetName("data_obs_graph")
+
+    for i in range(0, datagraph.GetN()):
+        x = ctypes.c_double(0.)
+        y = ctypes.c_double(0.)
+        datagraph.GetPoint(i, x, y)
+        x = x.value
+        y = y.value
+        x_err_low = datagraph.GetErrorXlow(i)
+        x_err_high = datagraph.GetErrorXhigh(i)
+        if y < 0:
+            datagraph.SetPoint(i, x, 0)
+            datagraph.SetPointError(i, x_err_low, x_err_high, 0., 0.)
+        else:
+            low, high = garwood_interval(int(y), cl=0.683)
+            datagraph.SetPointError(i, x_err_low, x_err_high, y - low, high - y)
+    datahist = datagraph
     
     bkghist.SetMarkerSize(0)
     bkghist.SetFillColor(2001)
@@ -323,11 +379,16 @@ if __name__ == "__main__":
     line.SetLineStyle(2)
     line.SetLineColor(ROOT.kBlack)
     line.Draw("same")
+
     
     ratio_bkghist = plot.MakeRatioHist(bkghist,bkghist,True,False)
     ratio_bkghist.Draw("e2same")
-    ratio_datahist = plot.MakeRatioHist(datahist,bkghist,True,False)
+    if isinstance(datahist,ROOT.TGraphAsymmErrors):
+        ratio_datahist = MakeRatioGraph(datahist,bkghist)
+    else:
+        ratio_datahist = plot.MakeRatioHist(datahist,bkghist,True,False)
     ratio_datahist.Draw("P Z 0 same")
+
     #sbhist = bkghist.Clone()
     #sbhist.SetLineColor(ROOT.kRed)
     #sbhist.SetLineWidth(2)
