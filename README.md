@@ -29,7 +29,7 @@ scram b -j8
 ### The magic command
 
 ```
-ulimit -c 0
+ulimit -s unlimited
 ```
 
 ### Pre-process datacards
@@ -120,4 +120,44 @@ And then plot using:
 
 ```
 plotImpacts.py -i impacts.json -o impacts
+```
+
+### Running combination with Run-2
+
+checkout the Run-2 datacards
+
+```
+git clone ssh://git@gitlab.cern.ch:7999/cms-analysis/hig/HIG-20-006/datacards.git Run2_datacards
+```
+
+make a directory to collect all the datacards for Run-2 and Run-3
+
+```
+mkdir run2run3_comb
+```
+
+copy Run-2 and Run-3 datacards to this folder
+
+```
+cp -r Run2_datacards/for_hig-25-012_combination/* run2run3_comb/. 
+cp outputs/cmb/htt_*.txt run2run3_comb/.
+cp outputs/cmb/common/htt_*.root run2run3_comb/common/.
+```
+
+don't forget this!
+```
+ulimit -s unlimited
+```
+
+make workspace
+
+```
+combineTool.py -m 125 -M T2W -P CombineHarvester.Combine_HtautauCP.CPMixtureDecays:CPMixtureDecays -i run2run3_comb/ -o ws.root --parallel 8 
+```
+
+run the fits. Note these take a while so they are submitted as batch jobs
+The fallback options are also needed as especially far from the best fit values the fits can struggle to converge
+
+```
+combineTool.py -m 125 -M MultiDimFit --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90 --points 21 --redefineSignalPOIs alpha  -d run2run3_comb/ws.root --algo grid -t -1 --there -n .alpha --alignEdges 1 --cminDefaultMinimizerStrategy=0 --cminDefaultMinimizerTolerance=0.1 --cminFallbackAlgo Minuit2,Migrad,0:1 --cminFallbackAlgo Minuit2,Migrad,0:2 --cminFallbackAlgo Minuit2,Migrad,0:4 --cminFallbackAlgo Minuit2,Migrad,0:10  --job-mode condor --task-name condor-run2run3-scan --sub-opts='+MaxRuntime=10800' --split-points 1
 ```
