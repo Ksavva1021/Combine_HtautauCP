@@ -4,6 +4,7 @@ import argparse
 import math
 import ctypes
 from scipy.stats import chi2
+import os
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 ROOT.TH1.AddDirectory(False)
