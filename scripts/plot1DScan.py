@@ -9,6 +9,7 @@ import argparse
 import os.path
 import numpy as np
 import gc
+import os
 gc.disable()
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
@@ -308,7 +309,8 @@ if args.POI == 'alpha':
   latex.SetNDC()
   latex.SetTextSize(0.04)
   latex.SetTextAlign(12)
-  latex.DrawLatex(.7,.9,"0^{+} vs 0^{-} = %.2f#sigma" % significance)
+#   latex.DrawLatex(.7,.9,"0^{+} vs 0^{-} = %.2f#sigma" % significance)
+  latex.DrawLatex(.7,.9,"Obs vs 0^{-} = %.2f#sigma" % ps_significance)
   print("0^{+} vs 0^{-} = %.3f#sigma" % significance)
   print('max sigma = ', max_significance)
   print('best vs CP-odd sigma = ', ps_significance)
@@ -471,7 +473,7 @@ if args.json is not None:
 
 plot.DrawCMSLogo(pads[0], args.logo, args.logo_sub, 10, 0.035, 0.035, 1.2, cmsTextSize=1.0)
 
-if not args.no_title: plot.DrawTitle(pads[0], '61.9 fb^{-1} (13.6 TeV)', 3) # early Run 3
+if not args.no_title: plot.DrawTitle(pads[0], '62.4 fb^{-1} (13.6 TeV)', 3) # early Run 3
 # if not args.no_title: plot.DrawTitle(pads[0], '58 fb^{-1} (13 TeV)', 3) # 16+17+18
 pads[0].SetTicks(1)
 
