@@ -145,8 +145,10 @@ if __name__ == "__main__":
                         help='Autoblinding threshold for signal/background ratio')
     parser.add_argument('--norm_bins', action='store_true',
                         help='Normalize bins to bin width')
-    parser.add_argument('--lumi', type=str, default='61.9 fb^{-1} (13.6 TeV)',
+    parser.add_argument('--lumi', type=str, default='62.4 fb^{-1} (13.6 TeV)',
                         help='Luminosity label for the plot')
+    parser.add_argument('--dir', type=str, default="",
+                        help='Output directory for the plots')
 
     args = parser.parse_args()
 
@@ -480,5 +482,5 @@ if __name__ == "__main__":
         legend.AddEntry(sighist_ps,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=90^{#circ})","l")
     legend.Draw("same")
     
-    canv.Print(f'{bin_name}.pdf')
+    canv.Print(os.path.join(args.dir, bin_name + '.pdf'))
     
