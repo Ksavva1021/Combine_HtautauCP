@@ -139,7 +139,7 @@ mkdir run2run3_comb
 copy Run-2 and Run-3 datacards to this folder
 
 ```
-cp -r cp -r Run2_datacards/for_hig-25-012_combination/\* run2run3_comb/. 
+cp -r cp -r Run2_datacards/for_hig-25-012_combination/* run2run3_comb/. 
 cp outputs/cmb/htt_*.txt run2run3_comb/.
 cp outputs/cmb/common/htt_*.root run2run3_comb/common/.
 ```
