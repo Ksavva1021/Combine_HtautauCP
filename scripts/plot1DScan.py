@@ -180,7 +180,7 @@ parser.add_argument('--y-max', type=float, default=8., help='max y to draw')
 parser.add_argument('--y-min', type=float, default=0., help='max y to draw')
 parser.add_argument('--x-max', type=float, default=None, help='max x to draw')
 parser.add_argument('--x-min', type=float, default=None, help='min x to draw')
-parser.add_argument('--remove-near-min', type=float, help='remove points with this fraction of the average x-spacing to the best-fit point')
+parser.add_argument('--remove-near-min', type=float, help='remove points with this fraction of the average x-spacing to the best-fit point', default=0.01)
 parser.add_argument('--rezero', action='store_true', help='correct y-values if a point with a lower minimum than zero is found')
 parser.add_argument('--output', '-o', help='output name')
 parser.add_argument('--main', '-m', help='Main input file for the scan')
@@ -219,6 +219,7 @@ if args.upper_cl is not None:
 
 main_scan = BuildScan(args.output, args.POI, [args.main], args.main_color, yvals, args.chop, args.remove_near_min, args.rezero, remove_delta = args.remove_delta, improve = args.improve)
 
+
 other_scans = [ ]
 other_scans_opts = [ ]
 if args.others is not None:
@@ -249,7 +250,7 @@ main_scan['graph'].SetMarkerColor(1)
 main_scan['graph'].SetLineColor(ROOT.TColor.GetColor("#000099"))
 main_scan['graph'].SetLineStyle(1)
 main_scan['graph'].SetLineWidth(3)
-main_scan['graph'].Draw('APL') #'APL'
+main_scan['graph'].Draw('APC') #'APL' ###TODO: change back to L
 
 
 axishist = plot.GetAxisHist(pads[0])
@@ -488,6 +489,7 @@ if len(other_scans) >= 3:
     else:
         legend = ROOT.TLegend(0.46, 0.7, 0.95, 0.93, '', 'NBNDC')
         legend.SetNColumns(2)
+
 
 if args.POI == 'alpha': legend.AddEntry(main_scan['func'], args.main_label + ': #alpha^{H#tau#tau} = %.0f#circ{}^{#plus %.0f#circ}_{#minus %.0f#circ}' % (val_nom[0], val_nom[1], abs(val_nom[2])), 'L')
 #if args.POI == 'alpha': legend.AddEntry(main_scan['func'], args.main_label + ': #alpha = %.5f#circ{}^{#plus %.5f#circ}_{#minus %.5f#circ}' % (val_nom[0], val_nom[1], abs(val_nom[2])), 'L')
