@@ -4,6 +4,7 @@ import argparse
 ROOT.TH1.AddDirectory(False)
 from ctypes import c_double
 import os
+import numpy as np
 ROOT.gROOT.SetBatch(True)
  
 # note that the merging of bins requires an even numnber of phi_CP bins, and this number must be set to the specific value used in the dictionary below otherwise the method will give incorrect results!
@@ -375,7 +376,7 @@ if args.test:
     hist_sym_1d = ROOT.TH1D('hist_sym_1d','Symmetrisation tests: all BDT bins',20,0,1)
     hist_flat_1d = ROOT.TH1D('hist_flat_1d','Flattening tests: all BDT bins',20,0,1)
     hist_sym_last_1d = ROOT.TH1D('hist_sym_last_1d','Symmetrisation tests: last BDT bin',20,0,1)
-    hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: lst BDT bin',20,0,1)
+    hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: last BDT bin',20,0,1)
 
     N_categories = len(test_results_sym)
     hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,6,0,6)

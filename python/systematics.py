@@ -101,7 +101,6 @@ def AddSMRun3Systematics(cb):
     ###############################################
 
     # signal theory uncertainties
-    #TODO: remove double _
 
     # QCD scale variations
     cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "QCDscale_ren_signal_ACCEPT", "shape", ch.SystMap()(1.0))
@@ -158,7 +157,6 @@ def AddSMRun3Systematics(cb):
     
     # TODO: electron trigger
 
-    #TODO: add back DM10 once template is added
     # statistical uncertainties
     for era in eras:
         # tau leg uncertainties
@@ -212,7 +210,6 @@ def AddSMRun3Systematics(cb):
     # TODO: MET uncl
     
     # MET recoil uncertainties
-    #TODO: remove the _
 
     cb.cp().process(recoil_procs).AddSyst(cb,'CMS_scale_met', 'shape', ch.SystMap()(1.0))
     cb.cp().process(recoil_procs).AddSyst(cb,'CMS_res_met', 'shape', ch.SystMap()(1.0))
