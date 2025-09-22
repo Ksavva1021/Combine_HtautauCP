@@ -377,12 +377,12 @@ if args.test:
     hist_flat_1d = ROOT.TH1D('hist_flat_1d','Flattening tests: all BDT bins',20,0,1)
     hist_sym_last_1d = ROOT.TH1D('hist_sym_last_1d','Symmetrisation tests: last BDT bin',20,0,1)
     hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: last BDT bin',20,0,1)
-
+ 
     N_categories = len(test_results_sym)
     hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,6,0,6)
     hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,6,0,6)
     hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,6,0,6)
-    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: lst BDT bin',N_categories,0,N_categories,6,0,6)
+    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: last BDT bin',N_categories,0,N_categories,6,0,6)
 
     hist_sym_2d.GetZaxis().SetTitle('P-value')
     hist_flat_2d.GetZaxis().SetTitle('P-value')
