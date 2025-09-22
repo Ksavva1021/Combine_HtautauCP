@@ -378,10 +378,10 @@ if args.test:
     hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: lst BDT bin',20,0,1)
 
     N_categories = len(test_results_sym)
-    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,10,0,10)
-    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,5,0,5)
-    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,10,0,10)
-    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: lst BDT bin',N_categories,0,N_categories,5,0,5)
+    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,6,0,6)
+    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,6,0,6)
+    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,6,0,6)
+    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: lst BDT bin',N_categories,0,N_categories,6,0,6)
 
     hist_sym_2d.GetZaxis().SetTitle('P-value')
     hist_flat_2d.GetZaxis().SetTitle('P-value')
@@ -392,35 +392,29 @@ if args.test:
     hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
     hist_sym_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
     hist_sym_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_sm_prod_ps_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_sm_prod_mm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(7,'ggH_ps_prod_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(8,'ggH_ps_prod_ps_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(9,'ggH_ps_prod_mm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(10,'Higgs_flat_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
+    hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
 
     hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
     hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
     hist_flat_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
     hist_flat_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
-    hist_flat_2d.GetYaxis().SetBinLabel(5,'Higgs_flat_htt125')
+    hist_flat_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
+    hist_flat_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
 
     hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
     hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
     hist_sym_last_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
     hist_sym_last_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_sm_prod_ps_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_sm_prod_mm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(7,'ggH_ps_prod_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(8,'ggH_ps_prod_ps_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(9,'ggH_ps_prod_mm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(10,'Higgs_flat_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
+    hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
 
     hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
     hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
     hist_flat_last_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
     hist_flat_last_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(5,'Higgs_flat_htt125')
+    hist_flat_last_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
+    hist_flat_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
 
     hist_sym_2d.SetStats(0)
     hist_flat_2d.SetStats(0)
@@ -451,26 +445,22 @@ if args.test:
         hist_sym_2d.GetXaxis().SetBinLabel(i, dirname)
         hist_sym_last_2d.GetXaxis().SetBinLabel(i, dirname)
         for hist_name, (p_val_total, p_val_last) in results.items():
-            if not(hist_name in ['JetFakes', 'ZTT','Higgs_flat_htt125'] or hist_name.startswith('ggH') or hist_name.startswith('qqH_sm')) or 'unfiltered' in hist_name: continue
+            #if not(hist_name in ['JetFakes', 'ZTT','Higgs_flat_htt125'] or hist_name.startswith('ggH') or hist_name.startswith('qqH_sm')) or 'unfiltered' in hist_name: continue
             #print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
             j = None
             if hist_name == 'ZTT': j = 1
             if hist_name == 'JetFakes': j = 2
             if hist_name == 'qqH_sm_htt125': j = 3
             if hist_name == 'ggH_sm_prod_sm_htt125': j = 4
-            if hist_name == 'ggH_sm_prod_ps_htt125': j = 5
-            if hist_name == 'ggH_sm_prod_mm_htt125': j = 6
-            if hist_name == 'ggH_ps_prod_sm_htt125': j = 7
-            if hist_name == 'ggH_ps_prod_ps_htt125': j = 8
-            if hist_name == 'ggH_ps_prod_mm_htt125': j = 9
-            if hist_name == 'Higgs_flat_htt125': j = 10
+            if hist_name == 'ggH_ps_prod_ps_htt125': j = 5
+            if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
 
             if j is None: continue
 
             hist_sym_2d.SetBinContent(i,j,p_val_total)
             hist_sym_last_2d.SetBinContent(i,j,p_val_last)
 
-            if j < 7: # only use statistically independent processes for 1D plot
+            if j: # only use statistically independent processes for 1D plot
               gr_sym_id.SetPoint(gr_sym_id.GetN(), p_val_total, 1)
               gr_sym_last_id.SetPoint(gr_sym_last_id.GetN(), p_val_last,1)
               hist_sym_1d.Fill(p_val_total)
@@ -485,7 +475,7 @@ if args.test:
         hist_flat_2d.GetXaxis().SetBinLabel(i, dirname)
         hist_flat_last_2d.GetXaxis().SetBinLabel(i, dirname)
         for hist_name, (p_val_total, p_val_last) in results.items():
-            if hist_name not in ['JetFakes', 'ZTT', 'qqH_flat_htt125', 'ggH_flat_prod_sm_htt125', 'Higgs_flat_htt125']: continue
+            #if hist_name not in ['JetFakes', 'ZTT', 'qqH_flat_htt125', 'ggH_flat_prod_sm_htt125', 'ggH_flat_prod_ps_htt125', 'ggH_flat_prod_mm_htt125']: continue
             #print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
 
             j = None
@@ -493,12 +483,17 @@ if args.test:
             if hist_name == 'JetFakes': j = 2
             if hist_name == 'qqH_flat_htt125': j = 3
             if hist_name == 'ggH_flat_prod_sm_htt125': j = 4
-            if hist_name == 'Higgs_flat_htt125': j = 5
+            if hist_name == 'ggH_flat_prod_ps_htt125': j = 5
+            if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
 
+            if j is None: continue
+
+            print(hist_flat_2d)
+            print(i,j,p_val_total)
             hist_flat_2d.SetBinContent(i,j,p_val_total)
             hist_flat_last_2d.SetBinContent(i,j,p_val_last)
 
-            if j and j not in [3,4]: # only use statistically independent processes for 1D plot
+            if j: # only use statistically independent processes for 1D plot
               hist_flat_1d.Fill(p_val_total)
               hist_flat_last_1d.Fill(p_val_last)
               gr_flat_id.SetPoint(gr_flat_id.GetN(), p_val_total, 1)
