@@ -43,9 +43,8 @@ def AddSMRun3Systematics(cb):
     # Luminosity
     ###############################################
 
-    # lumi uncertainty from here: https://twiki.cern.ch/twiki/bin/view/CMS/LumiRecommendationsRun3
-    # 1.3% recomended for 2023 while 1.4% recomended for 2022 - used the largest number = 1.4% 
-    cb.cp().process(mc_procs).AddSyst(cb, 'lumi_13p6TeV', 'lnN', ch.SystMap()(1.014))
+    # lumi uncertainty from here: https://cms-talk.web.cern.ch/t/luminosity-uncertainty-correlations-between-run-2-and-2022-and-2023/132007
+    cb.cp().process(mc_procs).AddSyst(cb, 'lumi_13p6TeV_2223', 'lnN', ch.SystMap()(1.0102))
 
 
     ###############################################
@@ -62,15 +61,15 @@ def AddSMRun3Systematics(cb):
 
     # DY XS uncertainties from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MATRIXCrossSectionsat13p6TeV
     # Quadrature sum of scale, PDF, and difference between NLO additive vs multiplicative
-    cb.cp().process(dy_procs).AddSyst(cb, 'CMS_htt_zjXsec_13p6TeV', 'lnN', ch.SystMap()((0.984,1.013)))
+    cb.cp().process(dy_procs).AddSyst(cb, 'cross_section_Z', 'lnN', ch.SystMap()((0.984,1.013)))
     
     # ttbar cross-section uncertainties from here: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/TtbarNNLO
     # Quadrature sum of scale, PDF, and mass uncerts
-    cb.cp().process(ttbar_procs).AddSyst(cb, 'CMS_htt_tjXsec_13p6TeV', 'lnN', ch.SystMap()((0.949,1.044)))
+    cb.cp().process(ttbar_procs).AddSyst(cb, 'cross_section_ttbar', 'lnN', ch.SystMap()((0.949,1.044)))
 
     #For VV in principle can take NNLO numbers from here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MATRIXCrossSectionsat13p6TeV
     #But since we mix together all VV + rare procs into this template, we take a conservative 5% uncertainty (same as for Run-2)
-    cb.cp().process(ttbar_procs).AddSyst(cb, 'CMS_htt_vvXsec_13p6TeV', 'lnN', ch.SystMap()(1.05))
+    cb.cp().process(ttbar_procs).AddSyst(cb, 'cross_section_VV', 'lnN', ch.SystMap()(1.05))
 
     # Higgs cross-section uncertainties from: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/LHCHWG136TeVxsec_extrap
 
