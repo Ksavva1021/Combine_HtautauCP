@@ -33,7 +33,27 @@ cp_bins = {
         "et_mva_higgs_ea1": 10,
         "et_mva_higgs_ea11pr": 8,
         "et_mva_higgs_epi": 8,
-        "et_mva_higgs_erho": 10
+        "et_mva_higgs_erho": 10,
+
+        "tt_tau_pia1" : 4,
+        "tt_tau_a11pra1" : 4,
+        "tt_tau_rhoa1" : 10,
+        "tt_tau_pia11pr" : 4,
+        "tt_tau_pirho" : 10,
+        "tt_tau_a1a1" : 4,
+        "tt_tau_pipi" : 4,
+        "tt_tau_rhoa11pr" : 10,
+        "tt_tau_rhorho" : 10,
+
+        "tt_fake_pia1" : 4,
+        "tt_fake_a11pra1" : 4,
+        "tt_fake_rhoa1" : 10,
+        "tt_fake_pia11pr" : 4,
+        "tt_fake_pirho" : 10,
+        "tt_fake_a1a1" : 4,
+        "tt_fake_pipi" : 4,
+        "tt_fake_rhoa11pr" : 10,
+        "tt_fake_rhorho" : 10,
 }
 
 test_results_sym = {}
@@ -164,9 +184,8 @@ def ASymmetrise(hist,hsm,hps,nxbins):
 
       c1_new = ( smj+psj-mmj + mmi)/2
       c2_new = ( smi+psi-mmi + mmj)/2
-
       e1_new = math.sqrt((e_smj+e_psj-e_mmj)**2 + e_mmi**2)/2 
-      e2_new = math.sqrt((e_smi+e_psi-e_mmi)**2 + e_mmj**2)/2 
+      e2_new = math.sqrt((e_smi+e_psi-e_mmi)**2 + e_mmj**2)/2       
 
       histnew.SetBinContent(lo_bin_,c1_new)
       histnew.SetBinContent(hi_bin_,c2_new)
@@ -259,7 +278,7 @@ def GetFFUncerts(dirname, infile):
     
         extra_hists[dirname] += [uncert_up, uncert_down]
 
-def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
+def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname, incData=False):
     directory = infile.Get(dirname)
 
     histos = []
@@ -285,7 +304,7 @@ def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
         histo.Write()    
         if nxbins== 1: continue    
         # if data we skip
-        if 'data_obs' in histo.GetName(): continue    
+        if 'data_obs' in histo.GetName() and not incData: continue    
         # if mm signal then we only anti-symmetrise
         elif 'H_mm' in histo.GetName() and 'htt125' in histo.GetName() and nxbins>1:
             hsm = directory.Get(histo.GetName().replace('H_mm_','H_sm_'))
@@ -326,8 +345,9 @@ output_file = ROOT.TFile(newfilename,"RECREATE")
 for key in original_file.GetListOfKeys():
     if isinstance(original_file.Get(key.GetName()),ROOT.TDirectory):
         dirname=key.GetName()
-        if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs"): GetFFUncerts(dirname, original_file)
-        getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname)
+        incData = dirname.startswith("tt_tau_") or dirname.startswith("tt_fake_")
+        if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs") and not dirname.startswith("tt_tau_") and not dirname.startswith("tt_fake_"): GetFFUncerts(dirname, original_file)
+        getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname, incData)
 
 if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_mva_fake' in ff_aiso_yields:
 
@@ -362,6 +382,14 @@ if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_m
 
 if args.test:
 
+    for_bkg_cats = False # can change to true to make plots for the background only categories
+    if for_bkg_cats:
+      n_flat = 3
+      n_sym = 3
+    else:
+      n_flat = 6
+      n_sym = 6
+
     if not os.path.exists('test_results'):
         os.makedirs('test_results')
 
@@ -378,44 +406,67 @@ if args.test:
     hist_sym_last_1d = ROOT.TH1D('hist_sym_last_1d','Symmetrisation tests: last BDT bin',20,0,1)
     hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: last BDT bin',20,0,1)
  
+
     N_categories = len(test_results_sym)
-    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,6,0,6)
-    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,6,0,6)
-    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,6,0,6)
-    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: last BDT bin',N_categories,0,N_categories,6,0,6)
+    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,n_sym,0,n_sym)
+    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,n_flat,0,n_flat)
+    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,n_sym,0,n_sym)
+    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: last BDT bin',N_categories,0,N_categories,n_flat,0,n_flat)
 
     hist_sym_2d.GetZaxis().SetTitle('P-value')
     hist_flat_2d.GetZaxis().SetTitle('P-value')
     hist_sym_last_2d.GetZaxis().SetTitle('P-value (last BDT bin)')
     hist_flat_last_2d.GetZaxis().SetTitle('P-value (last BDT bin)')
 
-    hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_sym_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    if for_bkg_cats:
+        hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_2d.GetYaxis().SetBinLabel(3,'data_obs')
 
-    hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_flat_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
-    hist_flat_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
-    hist_flat_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
-    hist_flat_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_2d.GetYaxis().SetBinLabel(3,'data_obs')
 
-    hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(3,'data_obs')
 
-    hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(3,'data_obs')
+
+    else:
+
+        hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
+        hist_sym_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
+        hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
+        hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
+        hist_flat_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
+        hist_flat_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
+        hist_flat_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
 
     hist_sym_2d.SetStats(0)
     hist_flat_2d.SetStats(0)
@@ -451,10 +502,13 @@ if args.test:
             j = None
             if hist_name == 'ZTT': j = 1
             if hist_name == 'JetFakes': j = 2
-            if hist_name == 'qqH_sm_htt125': j = 3
-            if hist_name == 'ggH_sm_prod_sm_htt125': j = 4
-            if hist_name == 'ggH_ps_prod_ps_htt125': j = 5
-            if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
+            if not for_bkg_cats:
+              if hist_name == 'qqH_sm_htt125': j = 3
+              if hist_name == 'ggH_sm_prod_sm_htt125': j = 4
+              if hist_name == 'ggH_ps_prod_ps_htt125': j = 5
+              if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
+            else:
+              if hist_name == 'data_obs': j = 3
 
             if j is None: continue
 
@@ -482,10 +536,13 @@ if args.test:
             j = None
             if hist_name == 'ZTT': j = 1
             if hist_name == 'JetFakes': j = 2
-            if hist_name == 'qqH_flat_htt125': j = 3
-            if hist_name == 'ggH_flat_prod_sm_htt125': j = 4
-            if hist_name == 'ggH_flat_prod_ps_htt125': j = 5
-            if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
+            if not for_bkg_cats:
+              if hist_name == 'qqH_flat_htt125': j = 3
+              if hist_name == 'ggH_flat_prod_sm_htt125': j = 4
+              if hist_name == 'ggH_flat_prod_ps_htt125': j = 5
+              if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
+            else:
+              if hist_name == 'data_obs': j = 3
 
             if j is None: continue
 
