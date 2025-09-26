@@ -113,7 +113,7 @@ for chn in chans:
 # TODO: systematics to be added here
 cb = AddSMRun3Systematics(cb) 
 
-if merge_mode == 2:
+if merge_mode == 2 or merge_mode == 3:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',
                  'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr',
                  'et_mva_higgs_erho', 'et_mva_higgs_ea11pr'
@@ -128,6 +128,14 @@ elif merge_mode == 1:
                 'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr', 'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
                 'et_mva_higgs_erho', 'et_mva_higgs_ea11pr', 'et_mva_higgs_epi', 'et_mva_higgs_ea1'
     ]
+elif merge_mode == 4:
+    # most extreme case where all categories and background processes are flattened
+    flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1', 'tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
+                 'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr', 'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
+                 'et_mva_higgs_erho', 'et_mva_higgs_ea11pr', 'et_mva_higgs_epi', 'et_mva_higgs_ea1'
+    ]
+    sym_cats = [
+    ]
 else:
     flat_cats = []
     sym_cats = []
@@ -137,7 +145,6 @@ else:
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     elif chn == 'tt': filename = '%s/added_histo-mergeXbins.root' % (input_folder)
-    #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
     else: filename = '%s/%s_Run3_merged-mergeXbins.root' % (input_folder, chn)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
@@ -150,7 +157,10 @@ for chn in chans:
             if cat[1] in flat_cats:
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
                 # JetFakes and signal are symmetrised rather than flattened
-                cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
+                if merge_mode == 3 or merge_mode == 4:
+                    cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_flat", "$BIN/$PROCESS_$SYSTEMATIC_flat")
+                else:
+                    cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
 
             elif cat[1] in sym_cats:
@@ -228,9 +238,9 @@ else:
     bbb_sym_signal.SetAddThreshold(0.)
     bbb_sym_signal.SetMergeThreshold(1.0)
     bbb_sym_signal.SetFixNorm(False)
-    bbb_sym_signal.MergeAndAdd(cb.cp().signals().process(["ggH_sm_prod_sm_htt","qqH_sm_htt","WH_sm_htt","ZH_sm_htt"]),cb)
-    bbb_sym_signal.MergeAndAdd(cb.cp().signals().process(["ggH_ps_prod_sm_htt","qqH_ps_htt","WH_ps_htt","ZH_ps_htt"]),cb)
-    bbb_sym_signal.MergeAndAdd(cb.cp().signals().process(["ggH_mm_prod_sm_htt","qqH_mm_htt","WH_mm_htt","ZH_mm_htt"]),cb)
+    bbb_sym_signal.MergeAndAdd(cb.cp().bin_id([1,2],False).signals().process(["ggH_sm_prod_sm_htt","qqH_sm_htt","WH_sm_htt","ZH_sm_htt"]),cb)
+    bbb_sym_signal.MergeAndAdd(cb.cp().bin_id([1,2],False).signals().process(["ggH_ps_prod_sm_htt","qqH_ps_htt","WH_ps_htt","ZH_ps_htt"]),cb)
+    bbb_sym_signal.MergeAndAdd(cb.cp().bin_id([1,2],False).signals().process(["ggH_mm_prod_sm_htt","qqH_mm_htt","WH_mm_htt","ZH_mm_htt"]),cb)
 
     if merge_mode == 1:
         bbb_sym.MergeAndAdd(cb.cp().bin_id([1,2], False).backgrounds(), cb)
@@ -239,7 +249,10 @@ else:
             for cat in cats[chn]:
                 if cat[1] in flat_cats:
                     bbb_flat.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs,False), cb)
-                    bbb_sym.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs), cb)
+                    if merge_mode == 3 or merge_mode == 4:
+                        bbb_flat.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs), cb)
+                    else:
+                        bbb_sym.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().process(fake_procs), cb)
                 elif cat[1] in sym_cats:
                     bbb_sym.MergeAndAdd(cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds(), cb)
 

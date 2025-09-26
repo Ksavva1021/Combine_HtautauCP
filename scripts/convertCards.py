@@ -379,6 +379,119 @@ if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_m
                 uncert = abs(uncert - 1)+1
                 f.write(f'  {dirname}: {uncert:.3f}\n')
 
+def MakePlot(hists=[], filename='plot.pdf'):
+
+    c = ROOT.TCanvas()
+    hists[0].SetMinimum(0)
+    hists[0].SetStats(0)
+    hists[0].SetTitle('')
+    hists[0].GetXaxis().SetTitle('#phi_{CP} (#circ)')
+    hists[0].Draw()
+    hists[1].SetLineColor(ROOT.kRed)
+    hists[1].Draw('same')
+    hists[2].SetLineColor(ROOT.kGreen-2)
+    hists[2].Draw('same')
+
+    sym_clone = hists[1].Clone()
+    # zero errors for sym_clone
+    for i in range(1,sym_clone.GetNbinsX()+1):
+        sym_clone.SetBinError(i,0)
+    flat_clone = hists[2].Clone()
+    for i in range(1,flat_clone.GetNbinsX()+1):
+        flat_clone.SetBinError(i,0)
+    sym_KS_test = hists[0].KolmogorovTest(sym_clone,"WW")
+    flat_KS_test = hists[0].KolmogorovTest(flat_clone,"WW")
+    sym_chi_pvalue = test_results_sym[dirname][hists[0].GetName()][0]
+    flat_chi_pvalue = test_results_flat[dirname][hists[0].GetName()][0]
+
+    legend = ROOT.TLegend(0.1,0.1,0.9,0.4)
+    legend.SetBorderSize(0)
+    legend.SetFillStyle(0)
+    legend.AddEntry(hists[0],'Original','l')
+    legend.AddEntry(hists[1],f'Symmetrised, chi2 p-val = {sym_chi_pvalue:.2f}, KS p-val = {sym_KS_test:.2f}','l')
+    legend.AddEntry(hists[2],f'Flattened, chi2 p-val = {flat_chi_pvalue:.2f}, KS p-val = {flat_KS_test:.2f}','l')
+    legend.Draw()
+
+    c.Print(filename)
+    
+def MakePlot(hists=[], filename='plot.pdf'):
+
+    # Create canvas and pads
+    c = ROOT.TCanvas("c","c",800,800)
+    pad1 = ROOT.TPad("pad1","pad1",0,0.3,1,1.0)  # top pad
+    pad2 = ROOT.TPad("pad2","pad2",0,0.0,1,0.3)  # bottom pad
+    pad1.SetBottomMargin(0)  # no x-labels on top plot
+    pad2.SetTopMargin(0)
+    pad2.SetBottomMargin(0.3)
+    pad1.Draw()
+    pad2.Draw()
+
+    ## ---- TOP PAD ----
+    pad1.cd()
+    hists[0].SetMinimum(0)
+    hists[0].SetStats(0)
+    hists[0].SetTitle('')
+    hists[0].GetXaxis().SetTitle('')
+    hists[0].Draw("e")
+    hists[1].SetLineColor(ROOT.kRed)
+    hists[1].Draw("e SAME")
+    hists[2].SetLineColor(ROOT.kGreen-2)
+    hists[2].Draw("e SAME")
+
+    # KS tests and chi2 p-values
+    sym_clone = hists[1].Clone()
+    for i in range(1,sym_clone.GetNbinsX()+1):
+        sym_clone.SetBinError(i,0)
+    flat_clone = hists[2].Clone()
+    for i in range(1,flat_clone.GetNbinsX()+1):
+        flat_clone.SetBinError(i,0)
+    sym_KS_test = hists[0].KolmogorovTest(sym_clone,"WW")
+    flat_KS_test = hists[0].KolmogorovTest(flat_clone,"WW")
+    sym_chi_pvalue = test_results_sym[dirname][hists[0].GetName()][0]
+    flat_chi_pvalue = test_results_flat[dirname][hists[0].GetName()][0]
+
+    legend = ROOT.TLegend(0.1,0.1,0.9,0.4)
+    legend.SetBorderSize(0)
+    legend.SetFillStyle(0)
+    legend.AddEntry(hists[0],'Original','el')
+    legend.AddEntry(hists[1],f'Symmetrised, chi2 p-val = {sym_chi_pvalue:.2f}, KS p-val = {sym_KS_test:.2f}','el')
+    legend.AddEntry(hists[2],f'Flattened, chi2 p-val = {flat_chi_pvalue:.2f}, KS p-val = {flat_KS_test:.2f}','el')
+    legend.Draw()
+
+    ## ---- BOTTOM PAD ----
+    pad2.cd()
+
+    ratio1 = hists[1].Clone()
+    ratio1.Divide(hists[0])
+    ratio1.SetLineColor(ROOT.kRed)
+    ratio1.SetStats(0)
+    ratio1.SetTitle("")
+    ratio1.GetYaxis().SetTitle("Ratio")
+    ratio1.GetYaxis().SetNdivisions(505)
+    ratio1.GetYaxis().SetTitleSize(0.1)
+    ratio1.GetYaxis().SetTitleOffset(0.5)
+    ratio1.GetYaxis().SetLabelSize(0.08)
+
+    ratio1.GetXaxis().SetTitle("#phi_{CP} (#circ)")
+    ratio1.GetXaxis().SetTitleSize(0.1)
+    ratio1.GetXaxis().SetLabelSize(0.08)
+
+    ratio1.SetMinimum(0.85)
+    ratio1.SetMaximum(1.15)
+    ratio1.Draw("E")
+
+    ratio2 = hists[2].Clone()
+    ratio2.Divide(hists[0])
+    ratio2.SetLineColor(ROOT.kGreen-2)
+    ratio2.Draw("E SAME")
+
+    #draw a dashed line at y=1
+    line = ROOT.TLine(ratio1.GetXaxis().GetXmin(),1,ratio1.GetXaxis().GetXmax(),1)
+    line.SetLineStyle(2)
+    line.Draw("SAME")
+
+    # Save
+    c.Print(filename)
 
 if args.test:
 
@@ -491,6 +604,21 @@ if args.test:
     #print('\n\nSymmetrisation test results:')
     i = 0
     for dirname, results in test_results_sym.items():
+
+        if for_bkg_cats: 
+            data = output_file.Get(dirname+'/data_obs')
+            ztt = output_file.Get(dirname+'/ZTT')
+            fakes = output_file.Get(dirname+'/JetFakes')
+            data_sym = output_file.Get(dirname+'/data_obs_sym')
+            ztt_sym = output_file.Get(dirname+'/ZTT_sym')
+            fakes_sym = output_file.Get(dirname+'/JetFakes_sym')
+            data_flat = output_file.Get(dirname+'/data_obs_flat')
+            ztt_flat = output_file.Get(dirname+'/ZTT_flat')
+            fakes_flat = output_file.Get(dirname+'/JetFakes_flat')
+            MakePlot([data,data_sym,data_flat], 'test_results/'+dirname+'_data.pdf')
+            MakePlot([ztt,ztt_sym,ztt_flat], 'test_results/'+dirname+'_ZTT.pdf')
+            MakePlot([fakes,fakes_sym,fakes_flat], 'test_results/'+dirname+'_fakes.pdf')
+
         i+=1
         #print(f'Directory: {dirname}')
         # set x-labels
